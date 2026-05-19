@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="Tower Of Death:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Tower_Of_Death_jar</output-path>
+    <root id="root">
+      <element id="archive" name="Tower Of Death.jar">
+        <element id="module-output" name="Tower Of Death" />
+      </element>
+    </root>
+  </artifact>
+</component>
