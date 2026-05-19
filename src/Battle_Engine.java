@@ -3,104 +3,63 @@ import java.util.Random;
 
 public class Battle_Engine {
 
-	// Constants for battle menu
-	private final int ATTACK = 1;
-	private final int DEFEND = 2;
-	private final int HEAL = 3;
-	private final int RUN_AWAY = 4;
-
-	// Arraylists for spawned enemies
 	private ArrayList<Enemy_REG> EnemySpawn = new ArrayList<Enemy_REG>();
 	private ArrayList<Enemy_Jackal> Jackal = new ArrayList<Enemy_Jackal>();
 
-	private final int MAXLEVEL = 100; // Maximum level of game
-	private int lastEnemyRecord = 0; // Used to record how many regular enemies spawned
+	private final int MAXLEVEL = 100;
+	private int lastEnemyRecord = 0;
 
-	// CRITICAL: Scope Fixes
 	private GameWindow window;
-	private int currentBattleFloor; // Track the floor level locally for the UI header
+	private int currentBattleFloor;
 
-	// Constructor accepts the GameWindow reference from Game_Engine
 	public Battle_Engine(GameWindow window) {
 		this.window = window;
 	}
 
-	// Load battle when player enters a level
 	public Player battle_loader(Player hero, int lvl)
 	{
-		// Store the current floor level locally so all methods in this class can see it
 		this.currentBattleFloor = lvl;
 
-		// Spawn Jackal based on level and hero stats
-		if(lvl == 10)
-		{
+		if(lvl == 10 || lvl == 20) {
 			spawnJackal(1, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
 		}
-		else if(lvl == 20)
-		{
-			spawnJackal(1, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
-		}
-		else if(lvl == 30)
-		{
+		else if(lvl == 30 || lvl == 40) {
 			spawnJackal(2, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
 		}
-		else if(lvl == 40)
-		{
-			spawnJackal(2, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
-		}
-		else if(lvl == 50)
-		{
+		else if(lvl == 50 || lvl == 60) {
 			spawnJackal(3, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
 		}
-		else if(lvl == 60)
-		{
-			spawnJackal(3, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
-		}
-		else if(lvl == 70)
-		{
+		else if(lvl == 70 || lvl == 80) {
 			spawnJackal(4, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
 		}
-		else if(lvl == 80)
-		{
-			spawnJackal(4, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
-		}
-		else if(lvl == 90)
-		{
+		else if(lvl == 90) {
 			spawnJackal(5, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
 		}
-		else if(lvl == MAXLEVEL)
-		{
+		else if(lvl == MAXLEVEL) {
 			spawnJackal(6, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
 		}
-		// For all other levels, load regular enemies
-		else
-		{
+		else {
 			spawnEnemyREG(lvl);
 		}
 
 		hero = battle_menu(hero, lvl);
-
 		return hero;
 	}
 
-	// Display Battle menu interface
 	private Player battle_menu(Player hero, int lvl)
 	{
-		// EXP gained for # enemies defeated
-		long enemyEXP_Gain = 1000 * lvl * hero.getLVL() * lastEnemyRecord;
-		long jackalEXP_Gain = 10000 * lvl * hero.getLVL();
+		// FIX: Stabilized base drops to prevent fast leveling inflation
+		long enemyEXP_Gain = 150L * lvl * lastEnemyRecord;
+		long jackalEXP_Gain = 1500L * lvl;
 
 		String choice = "";
 
-		// Determine which enemy the player will face
-		if(!EnemySpawn.isEmpty()) // For regular enemies
+		if(!EnemySpawn.isEmpty())
 		{
 			do
 			{
-				// FIX: Update UI Header with current stats and the local floor variable
 				window.updateHeader("COMBAT | Hero: " + hero.getName() + " | HP: " + hero.getHP() + " | Dungeon Floor: " + currentBattleFloor);
 
-				// Setup static menu action buttons
 				window.clearButtons();
 				window.addButton("Attack", "1");
 				window.addButton("Defend", "2");
@@ -111,12 +70,11 @@ public class Battle_Engine {
 
 				switch(choice)
 				{
-					case "1": // ATTACK
-						if(lastEnemyRecord > 0) // Track how many remaining
+					case "1":
+						if(lastEnemyRecord > 0)
 						{
-							// Update enemy HP based on hero attack calculation
 							EnemySpawn.get(0).setHP(hero.attack(EnemySpawn.get(0).getHP()));
-							window.appendLog(hero.attackMSG(0)); // Show player hit in the log
+							window.appendLog(hero.attackMSG(0));
 
 							if(EnemySpawn.get(0).getHP() > 0) {
 								hero.setHP(EnemySpawn.get(0).attack(hero.getHP()));
@@ -129,14 +87,14 @@ public class Battle_Engine {
 							}
 						}
 						break;
-					case "2": // DEFEND
+					case "2":
 						window.appendLog("Player defends, taking no damage.");
 						break;
-					case "3": // HEAL
+					case "3":
 						hero.healHP();
 						window.appendLog("Player casts a mending spell and heals to max HP.");
 						break;
-					case "4": // RUN AWAY
+					case "4":
 						EnemySpawn.clear();
 						window.appendLog("You managed to slip away into the dark corridors!");
 						break;
@@ -144,7 +102,6 @@ public class Battle_Engine {
 			}
 			while(!choice.equals("4") && hero.getHP() > 0 && lastEnemyRecord > 0);
 
-			// Post-battle evaluation
 			window.clearLog();
 			if (lastEnemyRecord == 0)
 			{
@@ -158,7 +115,7 @@ public class Battle_Engine {
 			waitForAck();
 			return hero;
 		}
-		else if(!Jackal.isEmpty()) // For Boss fights
+		else if(!Jackal.isEmpty())
 		{
 			do
 			{
@@ -174,7 +131,7 @@ public class Battle_Engine {
 
 				switch(choice)
 				{
-					case "1": // ATTACK
+					case "1":
 						if(!Jackal.isEmpty())
 						{
 							Jackal.get(0).setHP(hero.attack(Jackal.get(0).getHP()));
@@ -190,14 +147,14 @@ public class Battle_Engine {
 							}
 						}
 						break;
-					case "2": // DEFEND
+					case "2":
 						window.appendLog("Player braces for impact. Shield raised.");
 						break;
-					case "3": // HEAL
+					case "3":
 						hero.healHP();
 						window.appendLog("Player flashes with radiant healing energy.");
 						break;
-					case "4": // RUN AWAY
+					case "4":
 						Jackal.clear();
 						window.appendLog("You fled from the Guardian Boss!");
 						break;
@@ -210,6 +167,11 @@ public class Battle_Engine {
 			{
 				window.appendLog("The Guardian Jackal shatters into dust! You are victorious.");
 				hero = calculateEXP(hero, jackalEXP_Gain);
+
+				// FIX: Intercept victory state at Level 100 to stream ending cinematic crawler
+				if (lvl == MAXLEVEL) {
+					triggerVictoryEnding(hero);
+				}
 			}
 			else if(hero.getHP() <= 0) {
 				window.appendLog("The Tower claims another soul. Player has perished!");
@@ -221,49 +183,86 @@ public class Battle_Engine {
 		return hero;
 	}
 
-	// Levels up player based on the amount of EXP gained per battle
+	// FIX: Replaced linear chain checks with a dynamic quadratic loop
 	private Player calculateEXP(Player hero, long exp)
 	{
 		window.appendLog(hero.getName() + " has gained " + exp + " EXP!");
 		hero.setEXP(exp);
 
-		// Level 2 checks
-		if(hero.getEXP() >= 1000 && hero.getEXP() < 10000)
+		long nextLevelThreshold = (hero.getLVL() * (hero.getLVL() + 1) / 2) * 1000L;
+
+		while (hero.getEXP() >= nextLevelThreshold && hero.getLVL() < MAXLEVEL)
 		{
-			triggerLevelUp(hero);
-		}
-		else if(hero.getEXP() > 10000 * hero.getLVL())
-		{
-			triggerLevelUp(hero);
-		}
-		else if(hero.getEXP() > 20000 * hero.getLVL())
-		{
-			triggerLevelUp(hero);
-		}
-		else if(hero.getEXP() > 30000 * hero.getLVL())
-		{
-			triggerLevelUp(hero);
+			hero.setLVL();
+			hero.levelHP();
+			hero.setMP();
+			hero.setSTR();
+			hero.setAGL();
+			hero.setINT();
+			hero.setSTA();
+			hero.setLCK();
+			hero.setATK();
+			hero.setDEF();
+
+			window.appendLog("LEVEL UP! Advanced to Level " + hero.getLVL() + "!");
+
+			nextLevelThreshold = (hero.getLVL() * (hero.getLVL() + 1) / 2) * 1000L;
 		}
 
-		return(hero);
+		return hero;
 	}
 
-	// Helper to mutate stats cleanly during a level up string event
-	private void triggerLevelUp(Player hero) {
-		hero.setLVL();
-		hero.levelHP();
-		hero.setMP();
-		hero.setSTR();
-		hero.setAGL();
-		hero.setINT();
-		hero.setSTA();
-		hero.setLCK();
-		hero.setATK();
-		hero.setDEF();
-		window.appendLog("LEVEL UP! You have advanced to Level " + hero.getLVL() + "!");
+	// --- FIX: MULTI-STAGE NARRATIVE ENDING SYSTEM ---
+	private void triggerVictoryEnding(Player hero) {
+		// Screen 1
+		window.clearLog();
+		window.updateHeader("= THE TOWER COLLAPSES =");
+		window.appendLog("With a deafening roar, the Level 100 Guardian crumbles into brilliant white ash.");
+		window.appendLog("The ancient, corrupt seal holding the Tower of Death together shatters instantly.");
+		window.appendLog("\nThe obsidian foundations begin to violently tremble beneath your feet...");
+		waitForEndingAck("Next");
+
+		// Screen 2
+		window.clearLog();
+		window.updateHeader("= THE ESCAPE =");
+		window.appendLog("You sprint down the decaying, spiraling stone staircases as masonry rains down.");
+		window.appendLog("Corridors collapse into an endless abyss right behind you, but your instincts carry you forward.");
+		window.appendLog("\nBursting through the heavy iron entrance doors, you leap out into the open air...");
+		waitForEndingAck("Next");
+
+		// Screen 3
+		window.clearLog();
+		window.updateHeader("= EPILOGUE =");
+		window.appendLog("A profound silence falls over the valley. The Tower of Death is now nothing but dust.");
+		window.appendLog("The morning sun breaks through the mist, illuminating a vast, beautiful green expanse.");
+		window.appendLog("The crisp, fresh wilderness air instantly clears your mind of the dungeon's claustrophobic horrors.");
+		window.appendLog("\nYou have survived the impossible trial. Your name will be sung for generations.");
+		waitForEndingAck("View Final Records");
+
+		// Screen 4: Stats Summary Screen
+		window.clearLog();
+		window.updateHeader("=== CONQUEROR'S HALL OF FAME ===");
+		window.appendLog("      TOWER OF DEATH - VICTORY CHAMPION\n");
+		window.appendLog("      Legendary Name: " + hero.getName());
+		window.appendLog("      Final Level:    " + hero.getLVL());
+		window.appendLog("      Total EXP:      " + hero.getEXP());
+		window.appendLog("      Endgame ATK:    " + hero.getATK());
+		window.appendLog("      Endgame DEF:    " + hero.getDEF());
+		window.appendLog("\n      Thank you for conquering the tower! Designed in 2026.");
+
+		window.clearButtons();
+		window.addButton("Close Game", "exit");
+		window.getButtonInput();
+
+		System.exit(0);
 	}
 
-	// Creates a random number of enemies to defeat based on the lvl it assigns to it
+	private void waitForEndingAck(String buttonLabel) {
+		window.clearButtons();
+		window.addButton(buttonLabel, "next");
+		window.getButtonInput();
+	}
+
 	private void spawnEnemyREG(int lvl)
 	{
 		Random rnd = new Random();
@@ -289,7 +288,6 @@ public class Battle_Engine {
 		}
 	}
 
-	// Determines if all regular enemies have been defeated
 	private boolean defeatEnemy()
 	{
 		if(lastEnemyRecord > 0)
@@ -304,7 +302,6 @@ public class Battle_Engine {
 		}
 	}
 
-	// Helper method to hold the static window frame state until user clicks continue
 	private void waitForAck() {
 		window.addButton("Continue", "ok");
 		window.getButtonInput();
