@@ -10,13 +10,15 @@ public class GameWindow extends JFrame {
     private String lastInput = "";
     private boolean inputReady = false;
 
-    // Fixed default dimensions matching the ideal wide aspect ratio layout
-    private static final int DEFAULT_WIDTH = 900;
-    private static final int DEFAULT_HEIGHT = 520;
+    // --- UPDATED DIMENSIONS ---
+    // Widened to 1050 to comfortably fit all standard shop/inventory buttons on one row
+    private static final int DEFAULT_WIDTH = 1050;
+    // Increased height slightly to ensure a wrapped second row is never cut off
+    private static final int DEFAULT_HEIGHT = 560;
 
     // Bounds to prevent the layout from shrinking into an unreadable size
     private static final int MIN_WIDTH = 700;
-    private static final int MIN_HEIGHT = 480;
+    private static final int MIN_HEIGHT = 520;
 
     public GameWindow() {
         setTitle("Tower Of Death - Retro Edition");
@@ -45,6 +47,7 @@ public class GameWindow extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
 
         // South Pane (Dynamic Button Control Menu layout)
+        // FlowLayout automatically handles wrapping to a new line!
         buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 8));
         buttonPanel.setBackground(Color.BLACK);
         buttonPanel.setBorder(BorderFactory.createTitledBorder(
@@ -52,7 +55,7 @@ public class GameWindow extends JFrame {
                 TitledBorder.CENTER, TitledBorder.TOP, monoFont, Color.GREEN));
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Enforce the ideal dimensional scale instead of using pack()
+        // Enforce the ideal dimensional scale
         setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -111,7 +114,6 @@ public class GameWindow extends JFrame {
             btn.setFocusPainted(false);
 
             btn.addActionListener(e -> {
-                // Fixed outer instance synchronization context reference lock
                 synchronized(GameWindow.this) {
                     lastInput = outputValue;
                     inputReady = true;

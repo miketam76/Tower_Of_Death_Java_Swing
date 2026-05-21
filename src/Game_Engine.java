@@ -6,54 +6,27 @@ public class Game_Engine {
 	private Player hero;
 	private Battle_Engine battle;
 	private GameWindow window;
-
-	// Dynamically assigned at runtime based on where the JAR file lives
 	private final String SAVEPATH;
-	private String filename;
+	private final double version = 0.30;
 
-	// Version number
-	private final double version = 0.10;
-
-	// Constant variables for main menu
 	private final int NEWGAME = 1;
 	private final int LOADGAME = 2;
 	private final int QUIT = 0;
 
-	// Constant variables for game menu
-	private final String UP_LEVEL = "1";
-	private final String CURRENT_LEVEL = "2";
-	private final String DISPLAY_PLAYER = "3";
-	private final String CHANGE_NAME = "4";
-	private final String HEAL_PLAYER = "5";
-	private final String SAVE_GAME = "6";
-	private final String GO_TO_MAIN = "7";
-
-	// Constants for level
 	private int CURRENTLEVEL = 1;
 	private final int MAXLEVEL = 100;
 
 	public Game_Engine(GameWindow window) {
 		this.window = window;
-
-		// Calculate the absolute path of the running JAR directory, then append the folder name
 		this.SAVEPATH = locateJarDirectory() + "savegames" + File.separator;
-
 		ensureSaveDirectoryExists();
 	}
 
-	// Safely extracts the true execution folder path regardless of how the OS executes the JAR
 	private String locateJarDirectory() {
 		try {
-			String path = Game_Engine.class.getProtectionDomain()
-					.getCodeSource()
-					.getLocation()
-					.toURI()
-					.getPath();
-
+			String path = Game_Engine.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
 			File jarFile = new File(path);
-			if (path.endsWith(".jar")) {
-				return jarFile.getParent() + File.separator;
-			}
+			if (path.endsWith(".jar")) return jarFile.getParent() + File.separator;
 			return jarFile.getPath() + File.separator;
 		} catch (Exception e) {
 			return "." + File.separator;
@@ -62,9 +35,7 @@ public class Game_Engine {
 
 	private void ensureSaveDirectoryExists() {
 		File folder = new File(SAVEPATH);
-		if (!folder.exists()) {
-			folder.mkdirs();
-		}
+		if (!folder.exists()) folder.mkdirs();
 	}
 
 	public void main_Menu()
@@ -82,46 +53,30 @@ public class Game_Engine {
 			window.appendLog("Welcome to Tower Of Death - version " + version);
 			window.appendLog("\nPlease select an option below.");
 
-			try {
-				choice = Integer.parseInt(window.getButtonInput());
-			} catch (NumberFormatException e) {
-				choice = -1;
-			}
+			try { choice = Integer.parseInt(window.getButtonInput()); }
+			catch (NumberFormatException e) { choice = -1; }
 
 			switch(choice)
 			{
 				case NEWGAME:
 					hero = new Player();
 					changeName();
-
-					// Trigger the narrative prologue before dropping into the game loop
 					triggerIntroSequence();
-
 					game_Menu();
 					break;
 				case LOADGAME:
-					if(load_game_menu())
-					{
-						game_Menu();
-					}
+					if(load_game_menu()) game_Menu();
 					break;
 				case QUIT:
 					window.clearLog();
 					window.updateHeader("GAME OVER");
 					window.appendLog("Exiting Tower Of Death. Thank you for playing!");
 					window.clearButtons();
-
-					try {
-						Thread.sleep(800);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-					}
-
+					try { Thread.sleep(800); } catch (InterruptedException e) {}
 					System.exit(0);
 					break;
 			}
-		}
-		while(choice != QUIT);
+		} while(choice != QUIT);
 	}
 
 	public void game_Menu()
@@ -130,24 +85,19 @@ public class Game_Engine {
 		do
 		{
 			window.clearLog();
-			window.updateHeader("Location: Exploration Hub | Current Level: " + CURRENTLEVEL);
+			window.updateHeader("Location: Hub | Level: " + CURRENTLEVEL + " | Gold: " + hero.getGold());
 			window.clearButtons();
 
-			if(CURRENTLEVEL == 100)
-			{
-				window.addButton("Portal to Lvl 1", "1");
-			}
-			else
-			{
-				window.addButton("Go to Level " + (CURRENTLEVEL + 1), "1");
-			}
+			if(CURRENTLEVEL == 100) window.addButton("Portal to Lvl 1", "1");
+			else window.addButton("Go to Level " + (CURRENTLEVEL + 1), "1");
 
 			window.addButton("Enter Level " + CURRENTLEVEL, "2");
 			window.addButton("Show Stats", "3");
-			window.addButton("Change Name", "4");
-			window.addButton("Heal Player", "5");
-			window.addButton("Save Game", "6");
-			window.addButton("Main Menu", "7");
+			window.addButton("Inventory", "4");
+			window.addButton("Visit Shop", "5");
+			window.addButton("Heal Player", "6");
+			window.addButton("Save Game", "7");
+			window.addButton("Main Menu", "8");
 
 			window.appendLog("--- Exploration Options ---");
 			window.appendLog("Select an action from the action panel below.");
@@ -156,58 +106,178 @@ public class Game_Engine {
 
 			switch(choice)
 			{
-				case UP_LEVEL:
-					if(CURRENTLEVEL == MAXLEVEL)
-					{
+				case "1":
+					if(CURRENTLEVEL == MAXLEVEL) {
 						window.clearLog();
 						window.appendLog("You have reached the top level and see a swirling portal to go back to Level 1.");
 						window.clearButtons();
 						window.addButton("Enter Portal (Yes)", "y");
 						window.addButton("Stay Here (No)", "n");
-
-						if(window.getButtonInput().equalsIgnoreCase("y"))
-						{
-							window.clearLog();
-							window.appendLog("You step through the portal back to Level 1...\n");
+						if(window.getButtonInput().equalsIgnoreCase("y")) {
 							CURRENTLEVEL = 1;
 							waitForAck();
 						}
 					}
-					else {
-						CURRENTLEVEL++;
-					}
+					else CURRENTLEVEL++;
 					break;
-				case CURRENT_LEVEL:
+				case "2":
 					window.clearLog();
 					window.appendLog("Entering level " + CURRENTLEVEL + "...\n");
 					battle = new Battle_Engine(window);
 					hero = battle.battle_loader(hero, CURRENTLEVEL);
 					break;
-				case DISPLAY_PLAYER:
+				case "3":
 					window.clearLog();
 					window.appendLog(hero.playerStats());
 					waitForAck();
 					break;
-				case CHANGE_NAME:
-					changeName();
+				case "4":
+					inventory_Menu();
 					break;
-				case HEAL_PLAYER:
+				case "5":
+					shop_Menu();
+					break;
+				case "6":
 					hero.healHP();
 					window.clearLog();
 					window.appendLog("Your wounds close completely. Character has been fully healed.\n");
 					waitForAck();
 					break;
-				case SAVE_GAME:
+				case "7":
 					save_game_menu();
 					break;
-				case GO_TO_MAIN:
+				case "8":
 					window.clearLog();
 					window.appendLog("Returning to main menu...\n");
 					waitForAck();
 					break;
 			}
+		} while(!choice.equals("8"));
+	}
+
+	private void inventory_Menu() {
+		String choice = "";
+		do {
+			window.clearLog();
+			window.updateHeader("INVENTORY | Gold: " + hero.getGold());
+			window.appendLog("Equipped Weapon: " + (hero.getWeapon() != null ? hero.getWeapon().getName() : "None"));
+			window.appendLog("Equipped Armor:  " + (hero.getArmor() != null ? hero.getArmor().getName() : "None"));
+			window.appendLog("\nSelect an item in your bag to equip or use it:");
+
+			window.clearButtons();
+			if (hero.getInventory().isEmpty()) {
+				window.appendLog("\nYour bag is currently empty.");
+			} else {
+				for(int i = 0; i < hero.getInventory().size(); i++) {
+					window.addButton(hero.getInventory().get(i).getName(), String.valueOf(i));
+				}
+			}
+			window.addButton("Back to Hub", "back");
+
+			choice = window.getButtonInput();
+
+			if(!choice.equals("back")) {
+				int index = Integer.parseInt(choice);
+				Item selected = hero.getInventory().get(index);
+
+				window.clearLog();
+				if(selected.getType() == Item.POTION) {
+					hero.healHP();
+					hero.getInventory().remove(index);
+					window.appendLog("You drank the " + selected.getName() + " and fully restored your HP!");
+				} else if(selected.getType() == Item.WEAPON) {
+					hero.setWeapon(selected);
+					window.appendLog("You equipped the " + selected.getName() + "!");
+				} else if(selected.getType() == Item.ARMOR) {
+					hero.setArmor(selected);
+					window.appendLog("You put on the " + selected.getName() + "!");
+				}
+				waitForAck();
+			}
+		} while(!choice.equals("back"));
+	}
+
+	// --- NEW: DYNAMIC PROGRESSION SHOP SYSTEM ---
+	private void shop_Menu() {
+		String choice = "";
+		do {
+			window.clearLog();
+			window.updateHeader("TOWER MERCHANT | Your Gold: " + hero.getGold());
+			window.appendLog("A mysterious cloaked figure gestures to their wares.");
+			window.appendLog("\"What are you buying, stranger?\"");
+
+			window.clearButtons();
+			window.addButton("Health Potion (50g)", "Health Potion");
+
+			// Dynamically determine which tier brackets to show based on player level
+			int pLvl = hero.getLVL();
+
+			if (pLvl >= 90) { addShopTierToButtons(9); addShopTierToButtons(10); }
+			else if (pLvl >= 80) { addShopTierToButtons(8); addShopTierToButtons(9); }
+			else if (pLvl >= 70) { addShopTierToButtons(7); addShopTierToButtons(8); }
+			else if (pLvl >= 60) { addShopTierToButtons(6); addShopTierToButtons(7); }
+			else if (pLvl >= 50) { addShopTierToButtons(5); addShopTierToButtons(6); }
+			else if (pLvl >= 40) { addShopTierToButtons(4); addShopTierToButtons(5); }
+			else if (pLvl >= 30) { addShopTierToButtons(3); addShopTierToButtons(4); }
+			else if (pLvl >= 20) { addShopTierToButtons(2); addShopTierToButtons(3); }
+			else if (pLvl >= 10) { addShopTierToButtons(1); addShopTierToButtons(2); }
+			else { addShopTierToButtons(1); } // Level 1-9 just gets Tier 1
+
+			window.addButton("Leave Shop", "leave");
+
+			choice = window.getButtonInput();
+
+			if(!choice.equals("leave")) {
+				Item desiredItem = Item.getByName(choice);
+				window.clearLog();
+
+				if (hero.getGold() >= desiredItem.getCost()) {
+					hero.subtractGold(desiredItem.getCost());
+					hero.getInventory().add(desiredItem);
+					window.appendLog("\"Heh heh... thank you!\"");
+					window.appendLog("\n" + desiredItem.getName() + " added to your inventory.");
+				} else {
+					window.appendLog("\"Not enough cash, stranger!\"");
+				}
+				waitForAck();
+			}
+		} while(!choice.equals("leave"));
+	}
+
+	// Helper to keep the shop UI clean
+	private void addShopTierToButtons(int tier) {
+		switch (tier) {
+			case 1:
+				window.addButton("Broadsword (100g)", "Broadsword");
+				window.addButton("Leather Armor (100g)", "Leather Armor"); break;
+			case 2:
+				window.addButton("Longsword (500g)", "Longsword");
+				window.addButton("Bronze Armor (500g)", "Bronze Armor"); break;
+			case 3:
+				window.addButton("Iron Sword (1500g)", "Iron Sword");
+				window.addButton("Iron Armor (1500g)", "Iron Armor"); break;
+			case 4:
+				window.addButton("Dark Sword (3000g)", "Dark Sword");
+				window.addButton("Dark Armor (3000g)", "Dark Armor"); break;
+			case 5:
+				window.addButton("Mythril Sword (6000g)", "Mythril Sword");
+				window.addButton("Mythril Armor (6000g)", "Mythril Armor"); break;
+			case 6:
+				window.addButton("Flame Sword (10k g)", "Flame Sword");
+				window.addButton("Flame Mail (10k g)", "Flame Mail"); break;
+			case 7:
+				window.addButton("Ice Brand (16k g)", "Ice Brand");
+				window.addButton("Ice Armor (16k g)", "Ice Armor"); break;
+			case 8:
+				window.addButton("Defender (25k g)", "Defender");
+				window.addButton("Genji Armor (25k g)", "Genji Armor"); break;
+			case 9:
+				window.addButton("Ragnarok (40k g)", "Ragnarok");
+				window.addButton("Crystal Mail (40k g)", "Crystal Mail"); break;
+			case 10:
+				window.addButton("Excalibur (75k g)", "Excalibur");
+				window.addButton("Adamant Armor (75k g)", "Adamant Armor"); break;
 		}
-		while(!choice.equals(GO_TO_MAIN));
 	}
 
 	private void changeName()
@@ -222,15 +292,10 @@ public class Game_Engine {
 		window.addButton("Mystic Mage", "Mystic Mage");
 		window.addButton("Ottawa Vanguard", "Ottawa Vanguard");
 
-		String newname = window.getButtonInput();
-		hero.setName(newname);
-
-		window.clearLog();
-		window.appendLog("Your identity has been reset to: " + hero.getName());
+		hero.setName(window.getButtonInput());
 		waitForAck();
 	}
 
-	// --- CLASSIC RPG NARRATIVE INTRO SEQUENCE ---
 	private void triggerIntroSequence() {
 		window.clearLog();
 		window.updateHeader("= THE LEGEND =");
@@ -261,19 +326,14 @@ public class Game_Engine {
 		window.getButtonInput();
 	}
 
-	// --- FF-STYLE SLOT LOADING INTERFACE ---
 	public boolean load_game_menu() {
 		window.clearLog();
 		window.updateHeader("LOAD GAME PROFILE");
 		window.appendLog("Select a storage data slot to recover your file:\n");
 
-		String slot1Meta = getSlotMetadata("slot1.sav");
-		String slot2Meta = getSlotMetadata("slot2.sav");
-		String slot3Meta = getSlotMetadata("slot3.sav");
-
-		window.appendLog("[Slot 1] " + slot1Meta);
-		window.appendLog("[Slot 2] " + slot2Meta);
-		window.appendLog("[Slot 3] " + slot3Meta);
+		window.appendLog("[Slot 1] " + getSlotMetadata("slot1.sav"));
+		window.appendLog("[Slot 2] " + getSlotMetadata("slot2.sav"));
+		window.appendLog("[Slot 3] " + getSlotMetadata("slot3.sav"));
 
 		window.clearButtons();
 		window.addButton("Slot 1", "slot1.sav");
@@ -295,19 +355,14 @@ public class Game_Engine {
 		return executeLoad(targetFile);
 	}
 
-	// --- FF-STYLE SLOT SAVING INTERFACE WITH OVERWRITE GUARD ---
 	public void save_game_menu() {
 		window.clearLog();
 		window.updateHeader("SAVE GAME PROGRESS");
 		window.appendLog("Select a storage destination slot:\n");
 
-		String slot1Meta = getSlotMetadata("slot1.sav");
-		String slot2Meta = getSlotMetadata("slot2.sav");
-		String slot3Meta = getSlotMetadata("slot3.sav");
-
-		window.appendLog("[Slot 1] " + slot1Meta);
-		window.appendLog("[Slot 2] " + slot2Meta);
-		window.appendLog("[Slot 3] " + slot3Meta);
+		window.appendLog("[Slot 1] " + getSlotMetadata("slot1.sav"));
+		window.appendLog("[Slot 2] " + getSlotMetadata("slot2.sav"));
+		window.appendLog("[Slot 3] " + getSlotMetadata("slot3.sav"));
 
 		window.clearButtons();
 		window.addButton("Slot 1", "slot1.sav");
@@ -319,42 +374,29 @@ public class Game_Engine {
 		if (selectedSlot.equals("cancel")) return;
 
 		File targetFile = new File(SAVEPATH + selectedSlot);
-
 		if (targetFile.exists()) {
 			window.clearLog();
 			window.updateHeader("WARNING: OVERWRITE DETECTED");
 			window.appendLog("This slot already contains saved data:\n -> " + getSlotMetadata(selectedSlot));
 			window.appendLog("\nAre you absolutely sure you want to overwrite it?");
-
 			window.clearButtons();
 			window.addButton("Yes (Overwrite)", "confirm");
 			window.addButton("No (Cancel)", "cancel");
-
-			if (window.getButtonInput().equals("cancel")) {
-				window.clearLog();
-				window.appendLog("Save action aborted safely.");
-				waitForAck();
-				return;
-			}
+			if (window.getButtonInput().equals("cancel")) return;
 		}
-
 		executeSave(targetFile);
 	}
 
 	private String getSlotMetadata(String filename) {
 		File f = new File(SAVEPATH + filename);
-		if (!f.exists()) {
-			return "- Empty Slot -";
-		}
+		if (!f.exists()) return "- Empty Slot -";
 
 		try (Scanner peekReader = new Scanner(f)) {
 			if (!peekReader.hasNextLine()) return "- Empty Slot -";
-
 			String name = peekReader.nextLine().trim();
 			long exp = peekReader.nextLong();
 			int lvl = peekReader.nextInt();
 			int hp = peekReader.nextInt();
-
 			return name + " (Level " + lvl + ") - HP: " + hp;
 		} catch (Exception e) {
 			return "- Corrupted File Data -";
@@ -364,7 +406,6 @@ public class Game_Engine {
 	private boolean executeLoad(File targetFile) {
 		try (Scanner filereader = new Scanner(targetFile)) {
 			if (!filereader.hasNextLine()) return false;
-
 			String name = filereader.nextLine().trim();
 			long exp = filereader.nextLong();
 			int lvl = filereader.nextInt();
@@ -377,9 +418,21 @@ public class Game_Engine {
 			int lck = filereader.nextInt();
 			int atk = filereader.nextInt();
 			int def = filereader.nextInt();
+			int gold = filereader.nextInt();
 			CURRENTLEVEL = filereader.nextInt();
 
-			hero = new Player(name, exp, lvl, hp, mp, str, agl, Int, sta, lck, atk, def);
+			hero = new Player(name, exp, lvl, hp, mp, str, agl, Int, sta, lck, atk, def, gold);
+
+			String wepName = filereader.next();
+			if (!wepName.equals("None")) hero.setWeapon(Item.getByName(wepName));
+			String armName = filereader.next();
+			if (!armName.equals("None")) hero.setArmor(Item.getByName(armName));
+
+			int invSize = filereader.nextInt();
+			for(int i = 0; i < invSize; i++) {
+				hero.getInventory().add(Item.getByName(filereader.next()));
+			}
+
 			return true;
 		} catch (Exception e) {
 			window.clearLog();
@@ -392,9 +445,7 @@ public class Game_Engine {
 	private void executeSave(File targetFile) {
 		window.clearLog();
 		try (BufferedWriter out = new BufferedWriter(new FileWriter(targetFile))) {
-			out.write(hero.getName());
-			out.newLine();
-
+			out.write(hero.getName()); out.newLine();
 			out.write(hero.getEXP() + " ");
 			out.write(hero.getLVL() + " ");
 			out.write(hero.getHP() + " ");
@@ -406,7 +457,16 @@ public class Game_Engine {
 			out.write(hero.getLCK() + " ");
 			out.write(hero.getATK() + " ");
 			out.write(hero.getDEF() + " ");
+			out.write(hero.getGold() + " ");
 			out.write(CURRENTLEVEL + " ");
+
+			out.write((hero.getWeapon() != null ? hero.getWeapon().getName().replace(" ", "_") : "None") + " ");
+			out.write((hero.getArmor() != null ? hero.getArmor().getName().replace(" ", "_") : "None") + " ");
+
+			out.write(hero.getInventory().size() + " ");
+			for(Item item : hero.getInventory()) {
+				out.write(item.getName().replace(" ", "_") + " ");
+			}
 
 			window.appendLog("Success! Game state saved cleanly to destination slot:\n" + targetFile.getName());
 		} catch (IOException e) {

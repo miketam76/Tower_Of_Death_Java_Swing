@@ -48,9 +48,11 @@ public class Battle_Engine {
 
 	private Player battle_menu(Player hero, int lvl)
 	{
-		// FIX: Stabilized base drops to prevent fast leveling inflation
 		long enemyEXP_Gain = 150L * lvl * lastEnemyRecord;
 		long jackalEXP_Gain = 1500L * lvl;
+
+		int enemyGold_Gain = 45 * lvl * lastEnemyRecord;
+		int jackalGold_Gain = 500 * lvl;
 
 		String choice = "";
 
@@ -106,6 +108,8 @@ public class Battle_Engine {
 			if (lastEnemyRecord == 0)
 			{
 				window.appendLog("Victory! All enemies in this sector have been cleared.");
+				window.appendLog("Loot Recovered: " + enemyGold_Gain + " Gold!");
+				hero.addGold(enemyGold_Gain);
 				hero = calculateEXP(hero, enemyEXP_Gain);
 			}
 			else if(hero.getHP() <= 0) {
@@ -166,9 +170,10 @@ public class Battle_Engine {
 			if(Jackal.isEmpty() && !choice.equals("4"))
 			{
 				window.appendLog("The Guardian Jackal shatters into dust! You are victorious.");
+				window.appendLog("Boss Loot Recovered: " + jackalGold_Gain + " Gold!");
+				hero.addGold(jackalGold_Gain);
 				hero = calculateEXP(hero, jackalEXP_Gain);
 
-				// FIX: Intercept victory state at Level 100 to stream ending cinematic crawler
 				if (lvl == MAXLEVEL) {
 					triggerVictoryEnding(hero);
 				}
@@ -183,7 +188,6 @@ public class Battle_Engine {
 		return hero;
 	}
 
-	// FIX: Replaced linear chain checks with a dynamic quadratic loop
 	private Player calculateEXP(Player hero, long exp)
 	{
 		window.appendLog(hero.getName() + " has gained " + exp + " EXP!");
@@ -212,9 +216,7 @@ public class Battle_Engine {
 		return hero;
 	}
 
-	// --- FIX: MULTI-STAGE NARRATIVE ENDING SYSTEM ---
 	private void triggerVictoryEnding(Player hero) {
-		// Screen 1
 		window.clearLog();
 		window.updateHeader("= THE TOWER COLLAPSES =");
 		window.appendLog("With a deafening roar, the Level 100 Guardian crumbles into brilliant white ash.");
@@ -222,7 +224,6 @@ public class Battle_Engine {
 		window.appendLog("\nThe obsidian foundations begin to violently tremble beneath your feet...");
 		waitForEndingAck("Next");
 
-		// Screen 2
 		window.clearLog();
 		window.updateHeader("= THE ESCAPE =");
 		window.appendLog("You sprint down the decaying, spiraling stone staircases as masonry rains down.");
@@ -230,7 +231,6 @@ public class Battle_Engine {
 		window.appendLog("\nBursting through the heavy iron entrance doors, you leap out into the open air...");
 		waitForEndingAck("Next");
 
-		// Screen 3
 		window.clearLog();
 		window.updateHeader("= EPILOGUE =");
 		window.appendLog("A profound silence falls over the valley. The Tower of Death is now nothing but dust.");
@@ -239,15 +239,14 @@ public class Battle_Engine {
 		window.appendLog("\nYou have survived the impossible trial. Your name will be sung for generations.");
 		waitForEndingAck("View Final Records");
 
-		// Screen 4: Stats Summary Screen
 		window.clearLog();
 		window.updateHeader("=== CONQUEROR'S HALL OF FAME ===");
 		window.appendLog("      TOWER OF DEATH - VICTORY CHAMPION\n");
 		window.appendLog("      Legendary Name: " + hero.getName());
 		window.appendLog("      Final Level:    " + hero.getLVL());
 		window.appendLog("      Total EXP:      " + hero.getEXP());
-		window.appendLog("      Endgame ATK:    " + hero.getATK());
-		window.appendLog("      Endgame DEF:    " + hero.getDEF());
+		window.appendLog("      Endgame ATK:    " + hero.getTotalATK());
+		window.appendLog("      Endgame DEF:    " + hero.getTotalDEF());
 		window.appendLog("\n      Thank you for conquering the tower! Designed in 2026.");
 
 		window.clearButtons();
