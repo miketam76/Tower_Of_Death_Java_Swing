@@ -7,7 +7,7 @@ public class Game_Engine {
 	private Battle_Engine battle;
 	private GameWindow window;
 
-	// FIX: Dynamically assigned at runtime based on where the JAR file lives
+	// Dynamically assigned at runtime based on where the JAR file lives
 	private final String SAVEPATH;
 	private String filename;
 
@@ -51,14 +51,11 @@ public class Game_Engine {
 					.getPath();
 
 			File jarFile = new File(path);
-			// If running from a compiled JAR file, strip away the filename to get its parent directory
 			if (path.endsWith(".jar")) {
 				return jarFile.getParent() + File.separator;
 			}
-			// Fallback for running straight from class files inside an IDE development sandbox
 			return jarFile.getPath() + File.separator;
 		} catch (Exception e) {
-			// Absolute last-resort fallback to standard relative paths if URI parsing errors out
 			return "." + File.separator;
 		}
 	}
@@ -96,6 +93,10 @@ public class Game_Engine {
 				case NEWGAME:
 					hero = new Player();
 					changeName();
+
+					// Trigger the narrative prologue before dropping into the game loop
+					triggerIntroSequence();
+
 					game_Menu();
 					break;
 				case LOADGAME:
@@ -229,6 +230,38 @@ public class Game_Engine {
 		waitForAck();
 	}
 
+	// --- CLASSIC RPG NARRATIVE INTRO SEQUENCE ---
+	private void triggerIntroSequence() {
+		window.clearLog();
+		window.updateHeader("= THE LEGEND =");
+		window.appendLog("For centuries, the obsidian spire known as the Tower of Death has pierced the sky.");
+		window.appendLog("It is a place of absolute darkness, crawling with cursed entities and ancient guardians.");
+		window.appendLog("Thousands of brave souls have entered its heavy iron doors. None have ever returned.");
+		waitForIntroAck("Next");
+
+		window.clearLog();
+		window.updateHeader("= THE ARRIVAL =");
+		window.appendLog("You stand before the towering gates, the freezing wind howling through the valley.");
+		window.appendLog("You have traveled far to claim the legendary power sealed at the 100th floor.");
+		window.appendLog("\nWith a heavy push, the massive doors groan open, swallowing you into the shadows.");
+		waitForIntroAck("Step Inside");
+
+		window.clearLog();
+		window.updateHeader("= THE SAFE ZONE =");
+		window.appendLog("The heavy doors slam shut behind you, sealing away the outside world.");
+		window.appendLog("You find yourself in a dim, magically warded Exploration Hub at the base of the tower.");
+		window.appendLog("From here, the only way forward is up.");
+		window.appendLog("\nSteel your nerves, " + hero.getName() + ". Your trial begins now.");
+		waitForIntroAck("Begin Journey");
+	}
+
+	private void waitForIntroAck(String buttonLabel) {
+		window.clearButtons();
+		window.addButton(buttonLabel, "next");
+		window.getButtonInput();
+	}
+
+	// --- FF-STYLE SLOT LOADING INTERFACE ---
 	public boolean load_game_menu() {
 		window.clearLog();
 		window.updateHeader("LOAD GAME PROFILE");
@@ -262,6 +295,7 @@ public class Game_Engine {
 		return executeLoad(targetFile);
 	}
 
+	// --- FF-STYLE SLOT SAVING INTERFACE WITH OVERWRITE GUARD ---
 	public void save_game_menu() {
 		window.clearLog();
 		window.updateHeader("SAVE GAME PROGRESS");
