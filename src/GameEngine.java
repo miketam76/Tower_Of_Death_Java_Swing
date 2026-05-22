@@ -7,7 +7,7 @@ public class GameEngine {
 	private BattleEngine battle;
 	private GameWindow window;
 	private final String SAVEPATH;
-	private final double version = 0.30;
+	private final double version = 1.20;
 
 	private final int NEWGAME = 1;
 	private final int LOADGAME = 2;

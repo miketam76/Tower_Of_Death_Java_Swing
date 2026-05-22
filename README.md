@@ -1,4 +1,5 @@
-# Tower Of Death - Retro Edition (v1.0)
+Markdown
+# Tower Of Death - Retro Edition (v1.2)
 
 A classic, unforgiving Java-based dungeon crawler capturing the intense challenge and aesthetic of 1980s terminal-based interfaces. Ascend an obsidian spire, manage your resources, and fight your way to the ultimate trial on the 100th floor.
 
@@ -19,3 +20,19 @@ A classic, unforgiving Java-based dungeon crawler capturing the intense challeng
 2. Double-click the compiled `TowerOfDeath.jar` file, or run it via command line:
    ```bash
    java -jar TowerOfDeath.jar
+   ```
+3. The game will automatically generate a savegames/ directory in the same folder as the .jar file to safely store your progress.
+
+### Controls
+All exploration, combat, and inventory management is handled via the dynamic COMMANDS button panel at the bottom of the window.
+
+* **Combat: Choose to Attack, Defend, Heal, or Run Away.
+
+* **Inventory: Equip newly purchased weapons and armor, or consume Health Potions in the field.
+
+* **Shop: Visit the merchant from the Exploration Hub to spend your hard-earned gold.
+
+### 🛠️ Architecture Notes for Developers
+This project utilizes a dual-thread Swing architecture. The GUI is constructed safely on the Event Dispatch Thread (EDT), while the procedural game logic (menus, battles, pacing) runs independently on a Background Worker Thread.
+
+A custom wait/notify synchronization loop intercepts Swing button clicks, passing the input strings back to the engine thread to simulate traditional blocking scanner input, creating a seamless bridge between console-style logic and a modern Java GUI.
