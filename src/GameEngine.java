@@ -7,7 +7,7 @@ public class GameEngine {
 	private BattleEngine battle;
 	private GameWindow window;
 	private final String SAVEPATH;
-	private final double version = 1.20;
+	private final double version = 1.2;
 
 	private final int NEWGAME = 1;
 	private final int LOADGAME = 2;
@@ -160,8 +160,10 @@ public class GameEngine {
 		do {
 			window.clearLog();
 			window.updateHeader("INVENTORY | Gold: " + hero.getGold());
-			window.appendLog("Equipped Weapon: " + (hero.getWeapon() != null ? hero.getWeapon().getName() : "None"));
-			window.appendLog("Equipped Armor:  " + (hero.getArmor() != null ? hero.getArmor().getName() : "None"));
+			window.appendLog("Weapon: " + (hero.getWeapon() != null ? hero.getWeapon().getName() : "None"));
+			window.appendLog("Armor:  " + (hero.getArmor() != null ? hero.getArmor().getName() : "None"));
+			window.appendLog("Helmet: " + (hero.getHelmet() != null ? hero.getHelmet().getName() : "None"));
+			window.appendLog("Shield: " + (hero.getShield() != null ? hero.getShield().getName() : "None"));
 			window.appendLog("\nSelect an item in your bag to equip or use it:");
 
 			window.clearButtons();
@@ -191,13 +193,18 @@ public class GameEngine {
 				} else if(selected.getType() == Item.ARMOR) {
 					hero.setArmor(selected);
 					window.appendLog("You put on the " + selected.getName() + "!");
+				} else if(selected.getType() == Item.HELMET) {
+					hero.setHelmet(selected);
+					window.appendLog("You put on the " + selected.getName() + "!");
+				} else if(selected.getType() == Item.SHIELD) {
+					hero.setShield(selected);
+					window.appendLog("You equipped the " + selected.getName() + "!");
 				}
 				waitForAck();
 			}
 		} while(!choice.equals("back"));
 	}
 
-	// --- NEW: DYNAMIC PROGRESSION SHOP SYSTEM ---
 	private void shop_Menu() {
 		String choice = "";
 		do {
@@ -209,7 +216,6 @@ public class GameEngine {
 			window.clearButtons();
 			window.addButton("Health Potion (50g)", "Health Potion");
 
-			// Dynamically determine which tier brackets to show based on player level
 			int pLvl = hero.getLVL();
 
 			if (pLvl >= 90) { addShopTierToButtons(9); addShopTierToButtons(10); }
@@ -221,7 +227,7 @@ public class GameEngine {
 			else if (pLvl >= 30) { addShopTierToButtons(3); addShopTierToButtons(4); }
 			else if (pLvl >= 20) { addShopTierToButtons(2); addShopTierToButtons(3); }
 			else if (pLvl >= 10) { addShopTierToButtons(1); addShopTierToButtons(2); }
-			else { addShopTierToButtons(1); } // Level 1-9 just gets Tier 1
+			else { addShopTierToButtons(1); }
 
 			window.addButton("Leave Shop", "leave");
 
@@ -244,39 +250,58 @@ public class GameEngine {
 		} while(!choice.equals("leave"));
 	}
 
-	// Helper to keep the shop UI clean
 	private void addShopTierToButtons(int tier) {
 		switch (tier) {
 			case 1:
 				window.addButton("Broadsword (100g)", "Broadsword");
-				window.addButton("Leather Armor (100g)", "Leather Armor"); break;
+				window.addButton("Leather Armor (50g)", "Leather Armor");
+				window.addButton("Leather Cap (25g)", "Leather Cap");
+				window.addButton("Leather Shield (25g)", "Leather Shield"); break;
 			case 2:
 				window.addButton("Longsword (500g)", "Longsword");
-				window.addButton("Bronze Armor (500g)", "Bronze Armor"); break;
+				window.addButton("Bronze Armor (250g)", "Bronze Armor");
+				window.addButton("Bronze Helm (125g)", "Bronze Helm");
+				window.addButton("Bronze Shield (125g)", "Bronze Shield"); break;
 			case 3:
 				window.addButton("Iron Sword (1500g)", "Iron Sword");
-				window.addButton("Iron Armor (1500g)", "Iron Armor"); break;
+				window.addButton("Iron Armor (750g)", "Iron Armor");
+				window.addButton("Iron Helm (375g)", "Iron Helm");
+				window.addButton("Iron Shield (375g)", "Iron Shield"); break;
 			case 4:
 				window.addButton("Dark Sword (3000g)", "Dark Sword");
-				window.addButton("Dark Armor (3000g)", "Dark Armor"); break;
+				window.addButton("Dark Armor (1500g)", "Dark Armor");
+				window.addButton("Dark Helm (750g)", "Dark Helm");
+				window.addButton("Dark Shield (750g)", "Dark Shield"); break;
 			case 5:
 				window.addButton("Mythril Sword (6000g)", "Mythril Sword");
-				window.addButton("Mythril Armor (6000g)", "Mythril Armor"); break;
+				window.addButton("Mythril Armor (3000g)", "Mythril Armor");
+				window.addButton("Mythril Helm (1500g)", "Mythril Helm");
+				window.addButton("Mythril Shield (1500g)", "Mythril Shield"); break;
 			case 6:
 				window.addButton("Flame Sword (10k g)", "Flame Sword");
-				window.addButton("Flame Mail (10k g)", "Flame Mail"); break;
+				window.addButton("Flame Mail (5000g)", "Flame Mail");
+				window.addButton("Flame Helm (2500g)", "Flame Helm");
+				window.addButton("Flame Shield (2500g)", "Flame Shield"); break;
 			case 7:
 				window.addButton("Ice Brand (16k g)", "Ice Brand");
-				window.addButton("Ice Armor (16k g)", "Ice Armor"); break;
+				window.addButton("Ice Armor (8000g)", "Ice Armor");
+				window.addButton("Ice Helm (4000g)", "Ice Helm");
+				window.addButton("Ice Shield (4000g)", "Ice Shield"); break;
 			case 8:
 				window.addButton("Defender (25k g)", "Defender");
-				window.addButton("Genji Armor (25k g)", "Genji Armor"); break;
+				window.addButton("Genji Armor (12.5k g)", "Genji Armor");
+				window.addButton("Genji Helm (6250g)", "Genji Helm");
+				window.addButton("Genji Shield (6250g)", "Genji Shield"); break;
 			case 9:
 				window.addButton("Ragnarok (40k g)", "Ragnarok");
-				window.addButton("Crystal Mail (40k g)", "Crystal Mail"); break;
+				window.addButton("Crystal Mail (20k g)", "Crystal Mail");
+				window.addButton("Crystal Helm (10k g)", "Crystal Helm");
+				window.addButton("Crystal Shield (10k g)", "Crystal Shield"); break;
 			case 10:
 				window.addButton("Excalibur (75k g)", "Excalibur");
-				window.addButton("Adamant Armor (75k g)", "Adamant Armor"); break;
+				window.addButton("Adamant Armor (37.5k g)", "Adamant Armor");
+				window.addButton("Ribbon (18.7k g)", "Ribbon");
+				window.addButton("Aegis Shield (18.7k g)", "Aegis Shield"); break;
 		}
 	}
 
@@ -427,6 +452,10 @@ public class GameEngine {
 			if (!wepName.equals("None")) hero.setWeapon(Item.getByName(wepName));
 			String armName = filereader.next();
 			if (!armName.equals("None")) hero.setArmor(Item.getByName(armName));
+			String helmName = filereader.next();
+			if (!helmName.equals("None")) hero.setHelmet(Item.getByName(helmName));
+			String shieldName = filereader.next();
+			if (!shieldName.equals("None")) hero.setShield(Item.getByName(shieldName));
 
 			int invSize = filereader.nextInt();
 			for(int i = 0; i < invSize; i++) {
@@ -462,6 +491,8 @@ public class GameEngine {
 
 			out.write((hero.getWeapon() != null ? hero.getWeapon().getName().replace(" ", "_") : "None") + " ");
 			out.write((hero.getArmor() != null ? hero.getArmor().getName().replace(" ", "_") : "None") + " ");
+			out.write((hero.getHelmet() != null ? hero.getHelmet().getName().replace(" ", "_") : "None") + " ");
+			out.write((hero.getShield() != null ? hero.getShield().getName().replace(" ", "_") : "None") + " ");
 
 			out.write(hero.getInventory().size() + " ");
 			for(Item item : hero.getInventory()) {

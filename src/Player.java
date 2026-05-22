@@ -25,6 +25,8 @@ public class Player {
 	private int gold;
 	private Item weapon;
 	private Item armor;
+	private Item helmet; // NEW
+	private Item shield; // NEW
 	private ArrayList<Item> inventory;
 
 	public Player()
@@ -46,6 +48,8 @@ public class Player {
 		this.gold = 0;
 		this.weapon = null;
 		this.armor = null;
+		this.helmet = null;
+		this.shield = null;
 		this.inventory = new ArrayList<>();
 	}
 
@@ -88,13 +92,26 @@ public class Player {
 	public void addGold(int amount) { this.gold += amount; }
 	public void subtractGold(int amount) { this.gold -= amount; }
 	public ArrayList<Item> getInventory() { return inventory; }
+
 	public Item getWeapon() { return weapon; }
 	public void setWeapon(Item w) { this.weapon = w; }
 	public Item getArmor() { return armor; }
 	public void setArmor(Item a) { this.armor = a; }
+	public Item getHelmet() { return helmet; }
+	public void setHelmet(Item h) { this.helmet = h; }
+	public Item getShield() { return shield; }
+	public void setShield(Item s) { this.shield = s; }
 
 	public int getTotalATK() { return this.atk + (weapon != null ? weapon.getPower() : 0); }
-	public int getTotalDEF() { return this.def + (armor != null ? armor.getPower() : 0); }
+
+	// NEW: Calculates total defense from base stat + Armor + Helmet + Shield
+	public int getTotalDEF() {
+		int total = this.def;
+		if (armor != null) total += armor.getPower();
+		if (helmet != null) total += helmet.getPower();
+		if (shield != null) total += shield.getPower();
+		return total;
+	}
 
 	public void setLVL()
 	{
@@ -145,6 +162,8 @@ public class Player {
 	{
 		String wepStr = (weapon != null) ? weapon.getName() + " (+" + weapon.getPower() + ")" : "None";
 		String armStr = (armor != null) ? armor.getName() + " (+" + armor.getPower() + ")" : "None";
+		String helmStr = (helmet != null) ? helmet.getName() + " (+" + helmet.getPower() + ")" : "None";
+		String shldStr = (shield != null) ? shield.getName() + " (+" + shield.getPower() + ")" : "None";
 
 		return ("Name:\t" + this.name + "\n" +
 				"Gold:\t" + this.gold + "g\n" +
@@ -154,7 +173,9 @@ public class Player {
 				"MP:\t" + this.mp + "\n\n" +
 				"-- EQUIPMENT --\n" +
 				"Weapon:\t" + wepStr + "\n" +
-				"Armor:\t" + armStr + "\n\n" +
+				"Armor:\t" + armStr + "\n" +
+				"Helmet:\t" + helmStr + "\n" +
+				"Shield:\t" + shldStr + "\n\n" +
 				"-- BASE STATS --\n" +
 				"ATK:\t" + this.atk + " (Total: " + getTotalATK() + ")\n" +
 				"DEF:\t" + this.def + " (Total: " + getTotalDEF() + ")\n" +
