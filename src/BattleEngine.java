@@ -80,7 +80,8 @@ public class BattleEngine {
 
 							if(EnemySpawn.get(0).getHP() > 0) {
 								hero.setHP(EnemySpawn.get(0).attack(hero.getHP()));
-								window.appendLog("The Thug swings back!");
+								// UPDATE: Dynamically pulls the specific enemy's name
+								window.appendLog("The " + EnemySpawn.get(0).getName() + " strikes back!");
 							}
 							else
 							{
@@ -271,7 +272,8 @@ public class BattleEngine {
 			EnemySpawn.add(new EnemyREG(lvl));
 			lastEnemyRecord++;
 		}
-		window.appendLog(lastEnemyRecord + " rogue Thugs step out of the shadows to attack!");
+		// UPDATE: Changed general log line to account for the randomized pool
+		window.appendLog(lastEnemyRecord + " hostile monsters step out of the shadows to attack!");
 	}
 
 	private void spawnJackal(int lvl, int hp, int str, int agl, int sta, int atk, int def)
