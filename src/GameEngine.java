@@ -188,16 +188,24 @@ public class GameEngine {
 					hero.getInventory().remove(index);
 					window.appendLog("You drank the " + selected.getName() + " and fully restored your HP!");
 				} else if(selected.getType() == Item.WEAPON) {
+					if (hero.getWeapon() != null) hero.getInventory().add(hero.getWeapon());
 					hero.setWeapon(selected);
+					hero.getInventory().remove(index);
 					window.appendLog("You equipped the " + selected.getName() + "!");
 				} else if(selected.getType() == Item.ARMOR) {
+					if (hero.getArmor() != null) hero.getInventory().add(hero.getArmor());
 					hero.setArmor(selected);
+					hero.getInventory().remove(index);
 					window.appendLog("You put on the " + selected.getName() + "!");
 				} else if(selected.getType() == Item.HELMET) {
+					if (hero.getHelmet() != null) hero.getInventory().add(hero.getHelmet());
 					hero.setHelmet(selected);
+					hero.getInventory().remove(index);
 					window.appendLog("You put on the " + selected.getName() + "!");
 				} else if(selected.getType() == Item.SHIELD) {
+					if (hero.getShield() != null) hero.getInventory().add(hero.getShield());
 					hero.setShield(selected);
+					hero.getInventory().remove(index);
 					window.appendLog("You equipped the " + selected.getName() + "!");
 				}
 				waitForAck();
@@ -229,11 +237,18 @@ public class GameEngine {
 			else if (pLvl >= 10) { addShopTierToButtons(1); addShopTierToButtons(2); }
 			else { addShopTierToButtons(1); }
 
+			window.addButton("Sell Items", "sell_menu");
 			window.addButton("Leave Shop", "leave");
 
 			choice = window.getButtonInput();
 
-			if(!choice.equals("leave")) {
+			if (choice.equals("sell_menu")) {
+				sell_Menu();
+			} else if (choice.equals("owned")) {
+				window.clearLog();
+				window.appendLog("\"You already own that, stranger!\"");
+				waitForAck();
+			} else if (!choice.equals("leave")) {
 				Item desiredItem = Item.getByName(choice);
 				window.clearLog();
 
@@ -250,58 +265,103 @@ public class GameEngine {
 		} while(!choice.equals("leave"));
 	}
 
+	private void sell_Menu() {
+		String choice = "";
+		do {
+			window.clearLog();
+			window.updateHeader("SELL ITEMS | Your Gold: " + hero.getGold());
+			window.appendLog("\"What are you selling? I pay half price for old gear!\"");
+			window.appendLog("(Equipped items are hidden safely on your character)");
+
+			window.clearButtons();
+			if (hero.getInventory().isEmpty()) {
+				window.appendLog("\nYour bag is currently empty.");
+			} else {
+				for(int i = 0; i < hero.getInventory().size(); i++) {
+					Item item = hero.getInventory().get(i);
+					int sellPrice = item.getCost() / 2;
+					window.addButton(item.getName() + " (+" + sellPrice + "g)", "sell_" + i);
+				}
+			}
+			window.addButton("Back to Shop", "back");
+
+			choice = window.getButtonInput();
+
+			if(choice.startsWith("sell_")) {
+				int index = Integer.parseInt(choice.split("_")[1]);
+				Item selected = hero.getInventory().get(index);
+				int sellPrice = selected.getCost() / 2;
+
+				hero.addGold(sellPrice);
+				hero.getInventory().remove(index);
+
+				window.clearLog();
+				window.appendLog("\"Heh heh... a fine piece! Here's " + sellPrice + " gold.\"");
+				waitForAck();
+			}
+		} while(!choice.equals("back"));
+	}
+
+	private void addShopItem(String itemName, int cost) {
+		if (hero.hasEquipment(itemName)) {
+			window.addButton(itemName + " (Owned)", "owned");
+		} else {
+			window.addButton(itemName + " (" + cost + "g)", itemName);
+		}
+	}
+
 	private void addShopTierToButtons(int tier) {
 		switch (tier) {
 			case 1:
-				window.addButton("Broadsword (100g)", "Broadsword");
-				window.addButton("Leather Armor (50g)", "Leather Armor");
-				window.addButton("Leather Cap (25g)", "Leather Cap");
-				window.addButton("Leather Shield (25g)", "Leather Shield"); break;
+				addShopItem("Broadsword", 100);
+				addShopItem("Leather Armor", 50);
+				addShopItem("Leather Cap", 25);
+				addShopItem("Leather Shield", 25); break;
 			case 2:
-				window.addButton("Longsword (500g)", "Longsword");
-				window.addButton("Bronze Armor (250g)", "Bronze Armor");
-				window.addButton("Bronze Helm (125g)", "Bronze Helm");
-				window.addButton("Bronze Shield (125g)", "Bronze Shield"); break;
+				addShopItem("Longsword", 500);
+				addShopItem("Bronze Armor", 250);
+				addShopItem("Bronze Helm", 125);
+				addShopItem("Bronze Shield", 125); break;
 			case 3:
-				window.addButton("Iron Sword (1500g)", "Iron Sword");
-				window.addButton("Iron Armor (750g)", "Iron Armor");
-				window.addButton("Iron Helm (375g)", "Iron Helm");
-				window.addButton("Iron Shield (375g)", "Iron Shield"); break;
+				addShopItem("Iron Sword", 1500);
+				addShopItem("Iron Armor", 750);
+				addShopItem("Iron Helm", 375);
+				addShopItem("Iron Shield", 375); break;
 			case 4:
-				window.addButton("Dark Sword (3000g)", "Dark Sword");
-				window.addButton("Dark Armor (1500g)", "Dark Armor");
-				window.addButton("Dark Helm (750g)", "Dark Helm");
-				window.addButton("Dark Shield (750g)", "Dark Shield"); break;
+				addShopItem("Dark Sword", 3000);
+				addShopItem("Dark Armor", 1500);
+				addShopItem("Dark Helm", 750);
+				addShopItem("Dark Shield", 750); break;
 			case 5:
-				window.addButton("Mythril Sword (6000g)", "Mythril Sword");
-				window.addButton("Mythril Armor (3000g)", "Mythril Armor");
-				window.addButton("Mythril Helm (1500g)", "Mythril Helm");
-				window.addButton("Mythril Shield (1500g)", "Mythril Shield"); break;
+				addShopItem("Mythril Sword", 6000);
+				addShopItem("Mythril Armor", 3000);
+				addShopItem("Mythril Helm", 1500);
+				addShopItem("Mythril Shield", 1500); break;
 			case 6:
-				window.addButton("Flame Sword (10k g)", "Flame Sword");
-				window.addButton("Flame Mail (5000g)", "Flame Mail");
-				window.addButton("Flame Helm (2500g)", "Flame Helm");
-				window.addButton("Flame Shield (2500g)", "Flame Shield"); break;
+				addShopItem("Flame Sword", 10000);
+				addShopItem("Flame Mail", 5000);
+				addShopItem("Flame Helm", 2500);
+				addShopItem("Flame Shield", 2500); break;
 			case 7:
-				window.addButton("Ice Brand (16k g)", "Ice Brand");
-				window.addButton("Ice Armor (8000g)", "Ice Armor");
-				window.addButton("Ice Helm (4000g)", "Ice Helm");
-				window.addButton("Ice Shield (4000g)", "Ice Shield"); break;
+				addShopItem("Ice Brand", 16000);
+				addShopItem("Ice Armor", 8000);
+				addShopItem("Ice Helm", 4000);
+				addShopItem("Ice Shield", 4000); break;
 			case 8:
-				window.addButton("Defender (25k g)", "Defender");
-				window.addButton("Genji Armor (12.5k g)", "Genji Armor");
-				window.addButton("Genji Helm (6250g)", "Genji Helm");
-				window.addButton("Genji Shield (6250g)", "Genji Shield"); break;
+				addShopItem("Defender", 25000);
+				addShopItem("Genji Armor", 12500);
+				addShopItem("Genji Helm", 6250);
+				addShopItem("Genji Shield", 6250); break;
 			case 9:
-				window.addButton("Ragnarok (40k g)", "Ragnarok");
-				window.addButton("Crystal Mail (20k g)", "Crystal Mail");
-				window.addButton("Crystal Helm (10k g)", "Crystal Helm");
-				window.addButton("Crystal Shield (10k g)", "Crystal Shield"); break;
+				addShopItem("Ragnarok", 40000);
+				addShopItem("Crystal Mail", 20000);
+				addShopItem("Crystal Helm", 10000);
+				addShopItem("Crystal Shield", 10000); break;
 			case 10:
-				window.addButton("Excalibur (75k g)", "Excalibur");
-				window.addButton("Adamant Armor (37.5k g)", "Adamant Armor");
-				window.addButton("Ribbon (18.7k g)", "Ribbon");
-				window.addButton("Aegis Shield (18.7k g)", "Aegis Shield"); break;
+				addShopItem("Excalibur", 75000);
+				addShopItem("Adamant Armor", 37500);
+				addShopItem("Ribbon", 18750);
+				addShopItem("Aegis Shield", 18750); break;
 		}
 	}
 

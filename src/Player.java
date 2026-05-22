@@ -25,8 +25,8 @@ public class Player {
 	private int gold;
 	private Item weapon;
 	private Item armor;
-	private Item helmet; // NEW
-	private Item shield; // NEW
+	private Item helmet; // Restored
+	private Item shield; // Restored
 	private ArrayList<Item> inventory;
 
 	public Player()
@@ -104,7 +104,7 @@ public class Player {
 
 	public int getTotalATK() { return this.atk + (weapon != null ? weapon.getPower() : 0); }
 
-	// NEW: Calculates total defense from base stat + Armor + Helmet + Shield
+	// Dynamically adds up the defense from the 3 defensive slots
 	public int getTotalDEF() {
 		int total = this.def;
 		if (armor != null) total += armor.getPower();
@@ -181,5 +181,18 @@ public class Player {
 				"DEF:\t" + this.def + " (Total: " + getTotalDEF() + ")\n" +
 				"STR:\t" + this.str + "\n" +
 				"AGL:\t" + this.agl + "\n");
+	}
+
+	// Scans all 4 slots and the inventory to see if the player owns the item
+	public boolean hasEquipment(String itemName) {
+		if (weapon != null && weapon.getName().equals(itemName)) return true;
+		if (armor != null && armor.getName().equals(itemName)) return true;
+		if (helmet != null && helmet.getName().equals(itemName)) return true;
+		if (shield != null && shield.getName().equals(itemName)) return true;
+
+		for (Item item : inventory) {
+			if (item.getName().equals(itemName)) return true;
+		}
+		return false;
 	}
 }

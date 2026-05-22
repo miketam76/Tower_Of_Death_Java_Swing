@@ -2,8 +2,8 @@ public class Item {
     public static final int WEAPON = 1;
     public static final int ARMOR = 2;
     public static final int POTION = 3;
-    public static final int HELMET = 4;  // NEW
-    public static final int SHIELD = 5;  // NEW
+    public static final int HELMET = 4;  // Restored
+    public static final int SHIELD = 5;  // Restored
 
     private String name;
     private int type;
