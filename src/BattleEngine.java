@@ -1,10 +1,10 @@
 import java.util.ArrayList;
 import java.util.Random;
 
-public class Battle_Engine {
+public class BattleEngine {
 
-	private ArrayList<Enemy_REG> EnemySpawn = new ArrayList<Enemy_REG>();
-	private ArrayList<Enemy_Jackal> Jackal = new ArrayList<Enemy_Jackal>();
+	private ArrayList<EnemyREG> EnemySpawn = new ArrayList<EnemyREG>();
+	private ArrayList<EnemyJackal> Jackal = new ArrayList<EnemyJackal>();
 
 	private final int MAXLEVEL = 100;
 	private int lastEnemyRecord = 0;
@@ -12,7 +12,7 @@ public class Battle_Engine {
 	private GameWindow window;
 	private int currentBattleFloor;
 
-	public Battle_Engine(GameWindow window) {
+	public BattleEngine(GameWindow window) {
 		this.window = window;
 	}
 
@@ -268,7 +268,7 @@ public class Battle_Engine {
 		int spawn = rnd.nextInt(5) + 1;
 		for(int i = 0; i < spawn; i++)
 		{
-			EnemySpawn.add(new Enemy_REG(lvl));
+			EnemySpawn.add(new EnemyREG(lvl));
 			lastEnemyRecord++;
 		}
 		window.appendLog(lastEnemyRecord + " rogue Thugs step out of the shadows to attack!");
@@ -276,7 +276,7 @@ public class Battle_Engine {
 
 	private void spawnJackal(int lvl, int hp, int str, int agl, int sta, int atk, int def)
 	{
-		Jackal.add(new Enemy_Jackal(lvl, hp, str, agl, sta, atk, def));
+		Jackal.add(new EnemyJackal(lvl, hp, str, agl, sta, atk, def));
 		window.appendLog("WARNING: The floor environment warps. The Guardian Jackal has manifested!");
 	}
 
@@ -306,6 +306,6 @@ public class Battle_Engine {
 		window.getButtonInput();
 	}
 
-	public ArrayList <Enemy_REG> getEnemy_Reg() { return EnemySpawn; }
-	public ArrayList <Enemy_Jackal> getJackal() { return Jackal; }
+	public ArrayList <EnemyREG> getEnemy_Reg() { return EnemySpawn; }
+	public ArrayList <EnemyJackal> getJackal() { return Jackal; }
 }

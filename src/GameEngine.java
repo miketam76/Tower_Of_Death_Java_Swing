@@ -1,10 +1,10 @@
 import java.util.Scanner;
 import java.io.*;
 
-public class Game_Engine {
+public class GameEngine {
 
 	private Player hero;
-	private Battle_Engine battle;
+	private BattleEngine battle;
 	private GameWindow window;
 	private final String SAVEPATH;
 	private final double version = 0.30;
@@ -16,7 +16,7 @@ public class Game_Engine {
 	private int CURRENTLEVEL = 1;
 	private final int MAXLEVEL = 100;
 
-	public Game_Engine(GameWindow window) {
+	public GameEngine(GameWindow window) {
 		this.window = window;
 		this.SAVEPATH = locateJarDirectory() + "savegames" + File.separator;
 		ensureSaveDirectoryExists();
@@ -24,7 +24,7 @@ public class Game_Engine {
 
 	private String locateJarDirectory() {
 		try {
-			String path = Game_Engine.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+			String path = GameEngine.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
 			File jarFile = new File(path);
 			if (path.endsWith(".jar")) return jarFile.getParent() + File.separator;
 			return jarFile.getPath() + File.separator;
@@ -123,7 +123,7 @@ public class Game_Engine {
 				case "2":
 					window.clearLog();
 					window.appendLog("Entering level " + CURRENTLEVEL + "...\n");
-					battle = new Battle_Engine(window);
+					battle = new BattleEngine(window);
 					hero = battle.battle_loader(hero, CURRENTLEVEL);
 					break;
 				case "3":

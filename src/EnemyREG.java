@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class Enemy_REG {
+public class EnemyREG {
 	
 	private String name = "Thug";
 	private int lvl;
@@ -14,7 +14,7 @@ public class Enemy_REG {
 	Random rnd = new Random();
 	
 	// Default constructor - Boosts stats based on the level the player is at
-	public Enemy_REG(int lvl)
+	public EnemyREG(int lvl)
 	{
 		this.lvl = lvl;
 		this.hp = hp * lvl;

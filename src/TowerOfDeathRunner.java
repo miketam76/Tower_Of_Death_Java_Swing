@@ -1,6 +1,6 @@
 import javax.swing.SwingUtilities;
 
-public class runtime_Tester {
+public class TowerOfDeathRunner {
 
 	public static void main(String[] args) {
 		// 1. Safe initialization of the Swing UI on the Event Dispatch Thread (EDT)
@@ -10,7 +10,7 @@ public class runtime_Tester {
 
 			// 2. Spawn the Game Engine on a SEPARATE Background Worker Thread
 			Thread gameLogicThread = new Thread(() -> {
-				Game_Engine game = new Game_Engine(window);
+				GameEngine game = new GameEngine(window);
 				game.main_Menu();
 			});
 

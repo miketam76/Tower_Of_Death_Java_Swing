@@ -1,4 +1,4 @@
-public class Enemy_Jackal {
+public class EnemyJackal {
 
 	private String name = "Jackal";
 	private int lvl;
@@ -10,10 +10,10 @@ public class Enemy_Jackal {
 	private int def;
 
 	// Default constructor
-	public Enemy_Jackal() { }
+	public EnemyJackal() { }
 
 	// Overloaded constructor - scales based on boss tier and base parameters
-	public Enemy_Jackal(int lvl, int hp, int str, int agl, int sta, int atk, int def)
+	public EnemyJackal(int lvl, int hp, int str, int agl, int sta, int atk, int def)
 	{
 		this.lvl = lvl;
 		this.hp = hp * lvl;
