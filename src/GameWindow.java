@@ -10,13 +10,9 @@ public class GameWindow extends JFrame {
     private String lastInput = "";
     private boolean inputReady = false;
 
-    // --- UPDATED DIMENSIONS ---
-    // Widened to 1050 to comfortably fit all standard shop/inventory buttons on one row
     private static final int DEFAULT_WIDTH = 1050;
-    // Increased height slightly to ensure a wrapped second row is never cut off
     private static final int DEFAULT_HEIGHT = 560;
 
-    // Bounds to prevent the layout from shrinking into an unreadable size
     private static final int MIN_WIDTH = 700;
     private static final int MIN_HEIGHT = 520;
 
@@ -24,7 +20,6 @@ public class GameWindow extends JFrame {
         setTitle("Tower Of Death - Retro Edition");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Allow the user to maximize or stretch, but lock the floor boundary size
         setResizable(true);
         setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
 
@@ -46,16 +41,36 @@ public class GameWindow extends JFrame {
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         add(scrollPane, BorderLayout.CENTER);
 
-        // South Pane (Dynamic Button Control Menu layout)
-        // FlowLayout automatically handles wrapping to a new line!
-        buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 8));
+        // --- UPDATED COMMANDS SECTION (Side-Scroll / 3-Row Layout) ---
+
+        // 1. A Grid locked to exactly 3 rows. It expands columns infinitely to the right.
+        buttonPanel = new JPanel(new GridLayout(3, 0, 8, 8));
         buttonPanel.setBackground(Color.BLACK);
-        buttonPanel.setBorder(BorderFactory.createTitledBorder(
+
+        // 2. A wrapper to align the grid to the left. This stops the buttons from
+        // stretching weirdly across the whole screen when there are only 2 or 3 of them.
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(Color.BLACK);
+        wrapperPanel.add(buttonPanel, BorderLayout.WEST);
+
+        // 3. The ScrollPane to handle the horizontal side-scrolling
+        JScrollPane commandScroller = new JScrollPane(wrapperPanel);
+        commandScroller.setBackground(Color.BLACK);
+        commandScroller.getViewport().setBackground(Color.BLACK);
+
+        // Turn ON horizontal scrolling, turn OFF vertical scrolling
+        commandScroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        commandScroller.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+
+        // Move the retro border to frame the scroll pane instead of the inner panel
+        commandScroller.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(Color.GREEN), "COMMANDS",
                 TitledBorder.CENTER, TitledBorder.TOP, monoFont, Color.GREEN));
-        add(buttonPanel, BorderLayout.SOUTH);
 
-        // Enforce the ideal dimensional scale
+        // Lock the height to perfectly fit 3 rows plus the horizontal scrollbar track below it
+        commandScroller.setPreferredSize(new Dimension(DEFAULT_WIDTH, 175));
+        add(commandScroller, BorderLayout.SOUTH);
+
         setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -94,6 +109,8 @@ public class GameWindow extends JFrame {
             buttonPanel.removeAll();
             buttonPanel.revalidate();
             buttonPanel.repaint();
+            // Force the wrapper and scrollpane to recalculate their widths immediately
+            buttonPanel.getParent().revalidate();
         });
     }
 
@@ -104,7 +121,6 @@ public class GameWindow extends JFrame {
             btn.setBackground(Color.BLACK);
             btn.setForeground(Color.GREEN);
 
-            // Outer bounding box frame matching terminal line aesthetics
             btn.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(Color.GREEN, 1),
                     BorderFactory.createEmptyBorder(5, 10, 5, 10)
