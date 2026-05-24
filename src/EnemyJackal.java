@@ -1,43 +1,40 @@
+import java.util.*;
+
 public class EnemyJackal {
 
-	private String name = "Jackal";
+	private String name = "Guardian Jackal";
 	private int lvl;
 	private int hp;
-	private int str;
-	private int agl;
-	private int sta;
 	private int atk;
 	private int def;
 
-	// Default constructor
-	public EnemyJackal() { }
+	Random rnd = new Random();
 
-	// Overloaded constructor - scales based on boss tier and base parameters
-	public EnemyJackal(int lvl, int hp, int str, int agl, int sta, int atk, int def)
+	// Boss scales quadratically based strictly on the floor level
+	public EnemyJackal(int lvl)
 	{
 		this.lvl = lvl;
-		this.hp = hp * lvl;
-		this.str = str * lvl;
-		this.agl = agl * lvl;
-		this.sta = sta * lvl;
 
-		// FIX: Changed divisor from 2 to 12 to stop the boss from scaling into accidental one-shot kills
-		this.atk = (str / 12) * lvl;
+		int baseHp = 100;
+		int baseAtk = 10;
+		int baseDef = 5;
 
-		this.def = def * lvl;
+		this.hp = (baseHp * lvl) + (baseHp * lvl * lvl / 5);
+		this.atk = (baseAtk * lvl) + (baseAtk * lvl * lvl / 15);
+		this.def = (baseDef * lvl) + (baseDef * lvl * lvl / 10);
 	}
 
 	public int getHP() { return this.hp; }
 	public void setHP(int hp) { this.hp = hp; }
+	public int getDEF() { return this.def; }
+	public String getName() { return this.name; }
 
-	public int attack(int heroHP)
+	public int attack(int heroDEF)
 	{
-		System.out.println(toString());
-		return (heroHP - this.atk);
-	}
-
-	public String toString()
-	{
-		return (this.name + " claw attack hit " + this.atk + " points!");
+		int atkRnd = rnd.nextInt(20) + 1;
+		int rawDmg = this.atk + atkRnd;
+		int netDmg = (rawDmg * rawDmg) / (rawDmg + heroDEF);
+		if (netDmg < 1) netDmg = 1;
+		return netDmg;
 	}
 }

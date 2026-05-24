@@ -18,22 +18,19 @@ public class BattleEngine {
 		this.window = window;
 	}
 
-	// UPDATE: Added location parameter so the engine knows what to spawn
 	public Player battle_loader(Player hero, int lvl, String location)
 	{
 		this.currentBattleFloor = lvl;
 		this.location = location;
 
 		if (location.equals("TOWER")) {
-			// Tower Bosses every 10 levels
 			if(lvl % 10 == 0) {
-				spawnJackal(lvl / 10, hero.getHP(), hero.getSTR(), hero.getAGL(), hero.getSTA(), hero.getATK(), hero.getDEF());
+				spawnJackal(lvl); // Jackal constructor is much cleaner now
 			} else {
 				spawnEnemyREG(lvl, location);
 			}
 		}
 		else if (location.equals("WOODS")) {
-			// Woods Final Boss at Level 20
 			if(lvl == 20) {
 				spawnGateKeeper(lvl);
 			} else {
@@ -55,13 +52,14 @@ public class BattleEngine {
 
 		String choice = "";
 
+		// ==========================================
 		// 1. REGULAR ENEMIES
+		// ==========================================
 		if(!EnemySpawn.isEmpty())
 		{
 			do
 			{
 				window.updateHeader("COMBAT | Hero: " + hero.getName() + " | HP: " + hero.getHP() + " | Floor: " + currentBattleFloor);
-
 				window.clearButtons();
 				window.addButton("Attack", "1");
 				window.addButton("Defend", "2");
@@ -69,17 +67,23 @@ public class BattleEngine {
 				window.addButton("Run Away", "4");
 
 				choice = window.getButtonInput();
+				window.clearLog();
 
 				switch(choice)
 				{
 					case "1":
 						if(lastEnemyRecord > 0)
 						{
-							EnemySpawn.get(0).setHP(hero.attack(EnemySpawn.get(0).getHP()));
-							window.appendLog(hero.attackMSG(0));
+							// Hero attacks (Passes enemy DEF for formula)
+							int pDmg = hero.attack(EnemySpawn.get(0).getDEF());
+							EnemySpawn.get(0).setHP(EnemySpawn.get(0).getHP() - pDmg);
+							window.appendLog("You strike the " + EnemySpawn.get(0).getName() + " for " + pDmg + " damage!");
 
+							// Enemy counter-attacks (Passes player DEF for formula)
 							if(EnemySpawn.get(0).getHP() > 0) {
-								hero.setHP(EnemySpawn.get(0).attack(hero.getHP()));
+								int eDmg = EnemySpawn.get(0).attack(hero.getTotalDEF());
+								hero.setHP(hero.getHP() - eDmg);
+								window.appendLog("The " + EnemySpawn.get(0).getName() + " retaliates for " + eDmg + " damage!");
 							} else {
 								defeatEnemy();
 								window.appendLog("Enemy Defeated! Remaining enemies: " + lastEnemyRecord);
@@ -87,7 +91,13 @@ public class BattleEngine {
 						}
 						break;
 					case "2":
-						window.appendLog("Player defends, taking no damage.");
+						window.appendLog("You raise your guard, bracing for impact.");
+						if(EnemySpawn.get(0).getHP() > 0) {
+							// Defending triples your effective armor for the turn
+							int eDmg = EnemySpawn.get(0).attack(hero.getTotalDEF() * 3);
+							hero.setHP(hero.getHP() - eDmg);
+							window.appendLog("The " + EnemySpawn.get(0).getName() + " strikes your guard for " + eDmg + " damage!");
+						}
 						break;
 					case "3":
 						hero.healHP();
@@ -100,20 +110,21 @@ public class BattleEngine {
 				}
 			} while(!choice.equals("4") && hero.getHP() > 0 && lastEnemyRecord > 0);
 
-			window.clearLog();
 			if (lastEnemyRecord == 0) {
-				window.appendLog("Victory! All enemies in this sector have been cleared.");
+				window.appendLog("\nVictory! All enemies in this sector have been cleared.");
 				window.appendLog("Loot Recovered: " + enemyGold_Gain + " Gold!");
 				hero.addGold(enemyGold_Gain);
 				hero = calculateEXP(hero, enemyEXP_Gain);
 			} else if(hero.getHP() <= 0) {
-				window.appendLog("Your vision fades to black... Player has perished!");
+				window.appendLog("\nYour vision fades to black... Player has perished!");
 			}
 			waitForAck();
 			return hero;
 		}
 
+		// ==========================================
 		// 2. TOWER BOSS: JACKAL
+		// ==========================================
 		else if(!Jackal.isEmpty())
 		{
 			do {
@@ -123,34 +134,50 @@ public class BattleEngine {
 				window.addButton("Heal", "3"); window.addButton("Run Away", "4");
 
 				choice = window.getButtonInput();
+				window.clearLog();
 
 				switch(choice) {
 					case "1":
-						Jackal.get(0).setHP(hero.attack(Jackal.get(0).getHP()));
-						window.appendLog(hero.attackMSG(0));
-						if(Jackal.get(0).getHP() > 0) hero.setHP(Jackal.get(0).attack(hero.getHP()));
-						else Jackal.remove(0);
+						int pDmg = hero.attack(Jackal.get(0).getDEF());
+						Jackal.get(0).setHP(Jackal.get(0).getHP() - pDmg);
+						window.appendLog("You slash the Guardian Jackal for " + pDmg + " damage!");
+
+						if(Jackal.get(0).getHP() > 0) {
+							int eDmg = Jackal.get(0).attack(hero.getTotalDEF());
+							hero.setHP(hero.getHP() - eDmg);
+							window.appendLog("The Jackal's claws rake across you for " + eDmg + " damage!");
+						} else {
+							Jackal.remove(0);
+						}
 						break;
-					case "2": window.appendLog("Player braces for impact. Shield raised."); break;
+					case "2":
+						window.appendLog("You raise your guard, bracing for impact.");
+						if(Jackal.get(0).getHP() > 0) {
+							int eDmg = Jackal.get(0).attack(hero.getTotalDEF() * 3);
+							hero.setHP(hero.getHP() - eDmg);
+							window.appendLog("The Jackal slams into your shield for " + eDmg + " damage!");
+						}
+						break;
 					case "3": hero.healHP(); window.appendLog("Player flashes with radiant healing energy."); break;
 					case "4": Jackal.clear(); window.appendLog("You fled from the Guardian Boss!"); break;
 				}
 			} while(!choice.equals("4") && hero.getHP() > 0 && !Jackal.isEmpty());
 
-			window.clearLog();
 			if(Jackal.isEmpty() && !choice.equals("4")) {
-				window.appendLog("The Guardian Jackal shatters into dust! You are victorious.");
+				window.appendLog("\nThe Guardian Jackal shatters into dust! You are victorious.");
 				window.appendLog("Boss Loot Recovered: " + bossGold_Gain + " Gold!");
 				hero.addGold(bossGold_Gain);
 				hero = calculateEXP(hero, bossEXP_Gain);
 				if (lvl == MAXLEVEL) triggerVictoryEnding(hero);
-			} else if(hero.getHP() <= 0) window.appendLog("The Tower claims another soul. Player has perished!");
+			} else if(hero.getHP() <= 0) window.appendLog("\nThe Tower claims another soul. Player has perished!");
 
 			waitForAck();
 			return hero;
 		}
 
+		// ==========================================
 		// 3. WOODS BOSS: GATE KEEPER
+		// ==========================================
 		else if(!GateKeeper.isEmpty())
 		{
 			do {
@@ -160,31 +187,44 @@ public class BattleEngine {
 				window.addButton("Heal", "3"); window.addButton("Run Away", "4");
 
 				choice = window.getButtonInput();
+				window.clearLog();
 
 				switch(choice) {
 					case "1":
-						GateKeeper.get(0).setHP(hero.attack(GateKeeper.get(0).getHP()));
-						window.appendLog(hero.attackMSG(0));
-						if(GateKeeper.get(0).getHP() > 0) hero.setHP(GateKeeper.get(0).attack(hero.getHP()));
-						else GateKeeper.remove(0);
+						int pDmg = hero.attack(GateKeeper.get(0).getDEF());
+						GateKeeper.get(0).setHP(GateKeeper.get(0).getHP() - pDmg);
+						window.appendLog("You strike the Gate Keeper for " + pDmg + " damage!");
+
+						if(GateKeeper.get(0).getHP() > 0) {
+							int eDmg = GateKeeper.get(0).attack(hero.getTotalDEF());
+							hero.setHP(hero.getHP() - eDmg);
+							window.appendLog("The Gate Keeper swings its lantern for " + eDmg + " damage!");
+						} else {
+							GateKeeper.remove(0);
+						}
 						break;
-					case "2": window.appendLog("Player braces for impact. Shield raised."); break;
+					case "2":
+						window.appendLog("You raise your guard, bracing for impact.");
+						if(GateKeeper.get(0).getHP() > 0) {
+							int eDmg = GateKeeper.get(0).attack(hero.getTotalDEF() * 3);
+							hero.setHP(hero.getHP() - eDmg);
+							window.appendLog("The massive lantern crushes against your guard for " + eDmg + " damage!");
+						}
+						break;
 					case "3": hero.healHP(); window.appendLog("Player flashes with radiant healing energy."); break;
 					case "4": GateKeeper.clear(); window.appendLog("You fled in terror from the Gate Keeper!"); break;
 				}
 			} while(!choice.equals("4") && hero.getHP() > 0 && !GateKeeper.isEmpty());
 
-			window.clearLog();
 			if(GateKeeper.isEmpty() && !choice.equals("4")) {
-				window.appendLog("The Gate Keeper collapses, dropping a heavy, glowing Obsidian Key!");
+				window.appendLog("\nThe Gate Keeper collapses, dropping a heavy, glowing Obsidian Key!");
 				window.appendLog("The path to the Tower of Death is now unlocked.");
 				window.appendLog("Boss Loot Recovered: " + bossGold_Gain + " Gold!");
 
-				// CRITICAL: Grant the player the progression key!
 				hero.setTowerKey(true);
 				hero.addGold(bossGold_Gain);
 				hero = calculateEXP(hero, bossEXP_Gain);
-			} else if(hero.getHP() <= 0) window.appendLog("The woods claim another soul. Player has perished!");
+			} else if(hero.getHP() <= 0) window.appendLog("\nThe woods claim another soul. Player has perished!");
 
 			waitForAck();
 			return hero;
@@ -194,7 +234,7 @@ public class BattleEngine {
 	}
 
 	private Player calculateEXP(Player hero, long exp) {
-		window.appendLog(hero.getName() + " has gained " + exp + " EXP!");
+		window.appendLog("\n" + hero.getName() + " has gained " + exp + " EXP!");
 		hero.setEXP(exp);
 		long nextLevelThreshold = (hero.getLVL() * (hero.getLVL() + 1) / 2) * 1000L;
 		while (hero.getEXP() >= nextLevelThreshold && hero.getLVL() < MAXLEVEL) {
@@ -265,8 +305,8 @@ public class BattleEngine {
 		window.appendLog(lastEnemyRecord + " hostile monsters step out of the shadows to attack!");
 	}
 
-	private void spawnJackal(int lvl, int hp, int str, int agl, int sta, int atk, int def) {
-		Jackal.add(new EnemyJackal(lvl, hp, str, agl, sta, atk, def));
+	private void spawnJackal(int lvl) {
+		Jackal.add(new EnemyJackal(lvl));
 		window.appendLog("WARNING: The floor environment warps. The Guardian Jackal has manifested!");
 	}
 

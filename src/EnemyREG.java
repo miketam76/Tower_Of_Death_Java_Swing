@@ -13,7 +13,6 @@ public class EnemyREG {
 
 	Random rnd = new Random();
 
-	// Constructor now takes the location to determine the spawn pool
 	public EnemyREG(int lvl, String location)
 	{
 		this.lvl = lvl;
@@ -33,7 +32,7 @@ public class EnemyREG {
 				case 2: this.name = "Cursed Treant"; baseHp = 16; baseStr = 2; baseAgl = 1; baseDef = 3; break;
 				case 3: this.name = "Wraith"; baseHp = 7; baseStr = 5; baseAgl = 4; baseDef = 0; break;
 			}
-		} else { // TOWER
+		} else {
 			switch(type) {
 				case 0: this.name = "Thug"; baseHp = 11; baseStr = 3; baseAgl = 2; baseDef = 1; break;
 				case 1: this.name = "Skeleton"; baseHp = 9; baseStr = 4; baseAgl = 3; baseDef = 1; break;
@@ -42,28 +41,26 @@ public class EnemyREG {
 			}
 		}
 
-		this.hp = baseHp * lvl;
-		this.str = baseStr * lvl;
-		this.agl = baseAgl * lvl;
-		this.sta = baseSta * lvl;
-		this.atk = this.str * lvl;
-		this.def = baseDef * lvl;
+		// Quadratic scaling keeps enemies dangerous in the late game
+		this.hp = (baseHp * lvl) + (baseHp * lvl * lvl / 6);
+		this.str = (baseStr * lvl) + (baseStr * lvl * lvl / 10);
+		this.agl = (baseAgl * lvl) + (baseAgl * lvl * lvl / 10);
+		this.sta = (baseSta * lvl) + (baseSta * lvl * lvl / 10);
+		this.atk = this.str;
+		this.def = (baseDef * lvl) + (baseDef * lvl * lvl / 10);
 	}
 
 	public int getHP() { return this.hp; }
 	public void setHP(int hp) { this.hp = hp; }
-	public String getName() { return this.name; } // Added for dynamic logging
+	public int getDEF() { return this.def; }
+	public String getName() { return this.name; }
 
-	public int attack(int heroHP)
+	public int attack(int heroDEF)
 	{
 		int atkRnd = rnd.nextInt(15) + 1;
-		System.out.println(toString(atkRnd));
-		return (heroHP - (this.atk + atkRnd));
-	}
-
-	public String toString(int atkRnd)
-	{
-		// Changed "punch" to a generic "strike" so it makes sense for weapons/claws
-		return (this.name + " strikes for " + (this.atk + atkRnd) + " damage!");
+		int rawDmg = this.atk + atkRnd;
+		int netDmg = (rawDmg * rawDmg) / (rawDmg + heroDEF);
+		if (netDmg < 1) netDmg = 1;
+		return netDmg;
 	}
 }

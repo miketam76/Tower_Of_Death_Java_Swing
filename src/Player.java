@@ -25,11 +25,10 @@ public class Player {
 	private int gold;
 	private Item weapon;
 	private Item armor;
-	private Item helmet; // Restored
-	private Item shield; // Restored
+	private Item helmet;
+	private Item shield;
 	private ArrayList<Item> inventory;
 
-	// --- NEW: PROGRESSION FLAG ---
 	private boolean hasTowerKey;
 
 	public Player()
@@ -54,8 +53,7 @@ public class Player {
 		this.helmet = null;
 		this.shield = null;
 		this.inventory = new ArrayList<>();
-
-		this.hasTowerKey = false; // Locked by default
+		this.hasTowerKey = false;
 	}
 
 	public Player(String name, long exp, int lvl, int hp, int mp,
@@ -73,20 +71,15 @@ public class Player {
 		this.lck = lck;
 		this.atk = atk;
 		this.def = def;
-
 		this.gold = gold;
 		this.inventory = new ArrayList<>();
-
 		this.hasTowerKey = hasTowerKey;
-
 		recalculateMaxHealHP();
 	}
 
 	private void recalculateMaxHealHP() {
 		this.MAX_HEAL_HP = (MIN_HP * 4) * this.lvl;
-		if (this.MAX_HEAL_HP > MAX_HP) {
-			this.MAX_HEAL_HP = MAX_HP;
-		}
+		if (this.MAX_HEAL_HP > MAX_HP) this.MAX_HEAL_HP = MAX_HP;
 	}
 
 	public String getName() { return this.name; }
@@ -109,13 +102,11 @@ public class Player {
 	public Item getShield() { return shield; }
 	public void setShield(Item s) { this.shield = s; }
 
-	// --- NEW: TOWER KEY GETTER/SETTER ---
 	public boolean hasTowerKey() { return hasTowerKey; }
 	public void setTowerKey(boolean key) { this.hasTowerKey = key; }
 
 	public int getTotalATK() { return this.atk + (weapon != null ? weapon.getPower() : 0); }
 
-	// Dynamically adds up the defense from the 3 defensive slots
 	public int getTotalDEF() {
 		int total = this.def;
 		if (armor != null) total += armor.getPower();
@@ -124,20 +115,11 @@ public class Player {
 		return total;
 	}
 
-	public void setLVL()
-	{
-		this.lvl = this.lvl + 1;
-		if(this.lvl >= MAXLEVEL) this.lvl = MAXLEVEL;
-	}
-
+	public void setLVL() { this.lvl = this.lvl + 1; if(this.lvl >= MAXLEVEL) this.lvl = MAXLEVEL; }
 	public int getHP() { return this.hp; }
 	public void setHP(int heroHP) { this.hp = heroHP; }
 	public void healHP() { this.hp = this.MAX_HEAL_HP; }
-
-	public void levelHP() {
-		recalculateMaxHealHP();
-		healHP();
-	}
+	public void levelHP() { recalculateMaxHealHP(); healHP(); }
 
 	public int getMP() { return this.mp; }
 	public void setMP() { this.mp += 12; if(this.mp > MAX_STATS) this.mp = MAX_STATS; }
@@ -151,22 +133,19 @@ public class Player {
 	public void setSTA() { this.sta += 14; if(this.sta > MAX_STATS) this.sta = MAX_STATS; }
 	public int getLCK() { return this.lck; }
 	public void setLCK() { this.lck += 10; if(this.lck > MAX_STATS) this.lck = MAX_STATS; }
-
 	public int getATK() { return this.atk; }
 	public void setATK() { this.atk = this.str / 2; if(this.atk > MAX_STATS) this.atk = MAX_STATS; }
 	public int getDEF() { return this.def; }
 	public void setDEF() { this.def += 12; if(this.def > MAX_STATS) this.def = MAX_STATS; }
 
-	public int attack(int enemyHP)
+	// --- NEW: CLASSIC RPG DAMAGE MITIGATION ALGORITHM ---
+	public int attack(int enemyDEF)
 	{
 		int atkRnd = rnd.nextInt(20) + 1;
-		System.out.println(attackMSG(atkRnd));
-		return (enemyHP - (getTotalATK() + atkRnd));
-	}
-
-	public String attackMSG(int atkRnd)
-	{
-		return (this.name + " hit " + (getTotalATK() + atkRnd) + " points!");
+		int rawDmg = getTotalATK() + atkRnd;
+		int netDmg = (rawDmg * rawDmg) / (rawDmg + enemyDEF);
+		if (netDmg < 1) netDmg = 1;
+		return netDmg;
 	}
 
 	public String playerStats()
@@ -175,7 +154,6 @@ public class Player {
 		String armStr = (armor != null) ? armor.getName() + " (+" + armor.getPower() + ")" : "None";
 		String helmStr = (helmet != null) ? helmet.getName() + " (+" + helmet.getPower() + ")" : "None";
 		String shldStr = (shield != null) ? shield.getName() + " (+" + shield.getPower() + ")" : "None";
-
 		String keyStr = hasTowerKey ? "Yes" : "No";
 
 		return ("Name:\t" + this.name + "\n" +
@@ -197,7 +175,6 @@ public class Player {
 				"AGL:\t" + this.agl + "\n");
 	}
 
-	// Scans all 4 slots and the inventory to see if the player owns the item
 	public boolean hasEquipment(String itemName) {
 		if (weapon != null && weapon.getName().equals(itemName)) return true;
 		if (armor != null && armor.getName().equals(itemName)) return true;
