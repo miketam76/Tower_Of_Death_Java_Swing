@@ -10,18 +10,20 @@ public class EnemyJackal {
 
 	Random rnd = new Random();
 
-	// Boss scales quadratically based strictly on the floor level
-	public EnemyJackal(int lvl)
+	public EnemyJackal(int floorLvl)
 	{
-		this.lvl = lvl;
+		this.lvl = floorLvl;
 
-		int baseHp = 100;
-		int baseAtk = 10;
+		// The Jackal inherits the +20 Tower difficulty spike
+		int effectiveLvl = floorLvl + 20;
+
+		int baseHp = 150;
+		int baseAtk = 15;
 		int baseDef = 5;
 
-		this.hp = (baseHp * lvl) + (baseHp * lvl * lvl / 5);
-		this.atk = (baseAtk * lvl) + (baseAtk * lvl * lvl / 15);
-		this.def = (baseDef * lvl) + (baseDef * lvl * lvl / 10);
+		this.hp = (baseHp * effectiveLvl) + (baseHp * effectiveLvl * effectiveLvl / 30);
+		this.atk = (baseAtk * effectiveLvl) + (baseAtk * effectiveLvl * effectiveLvl / 20);
+		this.def = (baseDef * effectiveLvl) + (baseDef * effectiveLvl * effectiveLvl / 20);
 	}
 
 	public int getHP() { return this.hp; }
@@ -33,8 +35,10 @@ public class EnemyJackal {
 	{
 		int atkRnd = rnd.nextInt(20) + 1;
 		int rawDmg = this.atk + atkRnd;
+
 		int netDmg = (rawDmg * rawDmg) / (rawDmg + heroDEF);
 		if (netDmg < 1) netDmg = 1;
+
 		return netDmg;
 	}
 }

@@ -43,6 +43,12 @@ public class GameEngine {
         int choice = -1;
         do
         {
+            // CRITICAL FIX: Intercept a dead player before they reach the main menu
+            if (hero != null && hero.getHP() <= 0) {
+                handleGameOver();
+                continue; // Re-evaluate the loop state after the game over is handled
+            }
+
             window.clearLog();
             window.updateHeader("MAIN MENU");
             window.clearButtons();
@@ -87,6 +93,60 @@ public class GameEngine {
         } while(choice != QUIT);
     }
 
+    // --- NEW: THE GAME OVER INTERCEPTOR ---
+    private void handleGameOver() {
+        String choice = "";
+        do {
+            window.clearLog();
+            window.updateHeader("GAME OVER");
+            window.appendLog("Your hero has fallen in battle. The darkness consumes you.");
+            window.appendLog("What will be your fate?");
+
+            window.clearButtons();
+            window.addButton("Load Saved Game", "load");
+            window.addButton("Start New Game", "new");
+
+            choice = window.getButtonInput();
+
+            if (choice.equals("load")) {
+                if (!hasAnySaveFiles()) {
+                    window.clearLog();
+                    window.appendLog("There are no saved games available!");
+                    waitForAck();
+                } else {
+                    if (load_game_menu()) {
+                        // Load successful, route player to correct location
+                        if (currentLocation.equals("CROSSROADS") || currentLocation.equals("CITY")) {
+                            overworld_Menu();
+                        } else {
+                            game_Menu();
+                        }
+                        return; // Unwind out of the game over state
+                    }
+                }
+            } else if (choice.equals("new")) {
+                hero = new Player();
+                changeName();
+                triggerIntroSequence();
+                currentLocation = "CROSSROADS";
+                CURRENTLEVEL = 1;
+                overworld_Menu();
+                return; // Unwind out of the game over state
+            }
+        } while (true);
+    }
+
+    // Helper method to check if the save folder is empty
+    private boolean hasAnySaveFiles() {
+        File f1 = new File(SAVEPATH + "slot1.sav");
+        File f2 = new File(SAVEPATH + "slot2.sav");
+        File f3 = new File(SAVEPATH + "slot3.sav");
+
+        return (f1.exists() && f1.length() > 0) ||
+                (f2.exists() && f2.length() > 0) ||
+                (f3.exists() && f3.length() > 0);
+    }
+
     private void overworld_Menu() {
         currentLocation = "CROSSROADS";
         String choice = "";
@@ -98,7 +158,6 @@ public class GameEngine {
 
             window.clearButtons();
 
-            // Change button label dynamically based on possession of the key
             if (hero.hasTowerKey()) {
                 window.addButton("Tower of Death (Lv 1-100)", "tower");
             } else {
@@ -118,6 +177,8 @@ public class GameEngine {
                         currentLocation = "TOWER";
                         CURRENTLEVEL = 1;
                         game_Menu();
+                        // CRITICAL FIX: Ensure death unwinds the menu!
+                        if (hero.getHP() <= 0) return;
                     } else {
                         window.clearLog();
                         window.appendLog("The massive iron doors of the Tower of Death are sealed shut.");
@@ -130,6 +191,8 @@ public class GameEngine {
                     currentLocation = "WOODS";
                     CURRENTLEVEL = 1;
                     game_Menu();
+                    // CRITICAL FIX: Ensure death unwinds the menu!
+                    if (hero.getHP() <= 0) return;
                     break;
                 case "city":
                     city_Menu();
@@ -244,7 +307,6 @@ public class GameEngine {
                     window.clearLog();
                     window.appendLog("Delving into " + zoneName + " - Level " + CURRENTLEVEL + "...\n");
                     battle = new BattleEngine(window);
-                    // CRITICAL: Passed currentLocation so the BattleEngine knows what enemies to spawn!
                     hero = battle.battle_loader(hero, CURRENTLEVEL, currentLocation);
                     break;
                 case "3":
@@ -264,9 +326,9 @@ public class GameEngine {
             }
         } while(!choice.equals("5") && hero.getHP() > 0);
 
+        // CRITICAL FIX: If you died, instantly return out of this menu to let the unwinder handle the Game Over!
         if (hero.getHP() <= 0) {
-            choice = "5";
-            currentLocation = "CROSSROADS";
+            return;
         }
     }
 

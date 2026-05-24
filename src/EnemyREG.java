@@ -13,9 +13,16 @@ public class EnemyREG {
 
 	Random rnd = new Random();
 
-	public EnemyREG(int lvl, String location)
+	public EnemyREG(int floorLvl, String location)
 	{
-		this.lvl = lvl;
+		this.lvl = floorLvl;
+
+		// --- THE DIFFICULTY SPIKE ---
+		// Woods uses normal floor level. Tower shifts the math up by 20 floors!
+		int effectiveLvl = floorLvl;
+		if (location.equals("TOWER")) {
+			effectiveLvl = floorLvl + 20;
+		}
 
 		int baseHp = 11;
 		int baseStr = 3;
@@ -41,13 +48,13 @@ public class EnemyREG {
 			}
 		}
 
-		// Quadratic scaling keeps enemies dangerous in the late game
-		this.hp = (baseHp * lvl) + (baseHp * lvl * lvl / 6);
-		this.str = (baseStr * lvl) + (baseStr * lvl * lvl / 10);
-		this.agl = (baseAgl * lvl) + (baseAgl * lvl * lvl / 10);
-		this.sta = (baseSta * lvl) + (baseSta * lvl * lvl / 10);
+		// Calculate final stats using the boosted effective level
+		this.hp = (baseHp * effectiveLvl) + (baseHp * effectiveLvl * effectiveLvl / 6);
+		this.str = (baseStr * effectiveLvl) + (baseStr * effectiveLvl * effectiveLvl / 10);
+		this.agl = (baseAgl * effectiveLvl) + (baseAgl * effectiveLvl * effectiveLvl / 10);
+		this.sta = (baseSta * effectiveLvl) + (baseSta * effectiveLvl * effectiveLvl / 10);
 		this.atk = this.str;
-		this.def = (baseDef * lvl) + (baseDef * lvl * lvl / 10);
+		this.def = (baseDef * effectiveLvl) + (baseDef * effectiveLvl * effectiveLvl / 10);
 	}
 
 	public int getHP() { return this.hp; }
