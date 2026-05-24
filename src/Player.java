@@ -29,6 +29,9 @@ public class Player {
 	private Item shield; // Restored
 	private ArrayList<Item> inventory;
 
+	// --- NEW: PROGRESSION FLAG ---
+	private boolean hasTowerKey;
+
 	public Player()
 	{
 		this.name = "Hero";
@@ -51,10 +54,12 @@ public class Player {
 		this.helmet = null;
 		this.shield = null;
 		this.inventory = new ArrayList<>();
+
+		this.hasTowerKey = false; // Locked by default
 	}
 
 	public Player(String name, long exp, int lvl, int hp, int mp,
-				  int str, int agl, int Int, int sta, int lck, int atk, int def, int gold)
+				  int str, int agl, int Int, int sta, int lck, int atk, int def, int gold, boolean hasTowerKey)
 	{
 		this.name = name;
 		this.exp = exp;
@@ -71,6 +76,8 @@ public class Player {
 
 		this.gold = gold;
 		this.inventory = new ArrayList<>();
+
+		this.hasTowerKey = hasTowerKey;
 
 		recalculateMaxHealHP();
 	}
@@ -101,6 +108,10 @@ public class Player {
 	public void setHelmet(Item h) { this.helmet = h; }
 	public Item getShield() { return shield; }
 	public void setShield(Item s) { this.shield = s; }
+
+	// --- NEW: TOWER KEY GETTER/SETTER ---
+	public boolean hasTowerKey() { return hasTowerKey; }
+	public void setTowerKey(boolean key) { this.hasTowerKey = key; }
 
 	public int getTotalATK() { return this.atk + (weapon != null ? weapon.getPower() : 0); }
 
@@ -165,6 +176,8 @@ public class Player {
 		String helmStr = (helmet != null) ? helmet.getName() + " (+" + helmet.getPower() + ")" : "None";
 		String shldStr = (shield != null) ? shield.getName() + " (+" + shield.getPower() + ")" : "None";
 
+		String keyStr = hasTowerKey ? "Yes" : "No";
+
 		return ("Name:\t" + this.name + "\n" +
 				"Gold:\t" + this.gold + "g\n" +
 				"EXP:\t" + this.exp + "\n" +
@@ -176,6 +189,7 @@ public class Player {
 				"Armor:\t" + armStr + "\n" +
 				"Helmet:\t" + helmStr + "\n" +
 				"Shield:\t" + shldStr + "\n\n" +
+				"Tower Key:\t" + keyStr + "\n\n" +
 				"-- BASE STATS --\n" +
 				"ATK:\t" + this.atk + " (Total: " + getTotalATK() + ")\n" +
 				"DEF:\t" + this.def + " (Total: " + getTotalDEF() + ")\n" +

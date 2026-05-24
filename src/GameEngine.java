@@ -14,7 +14,7 @@ public class GameEngine {
     private final int QUIT = 0;
 
     private int CURRENTLEVEL = 1;
-    private final int MAXLEVEL = 100;
+    private String currentLocation = "CROSSROADS";
 
     public GameEngine(GameWindow window) {
         this.window = window;
@@ -62,10 +62,18 @@ public class GameEngine {
                     hero = new Player();
                     changeName();
                     triggerIntroSequence();
-                    game_Menu();
+                    currentLocation = "CROSSROADS";
+                    CURRENTLEVEL = 1;
+                    overworld_Menu();
                     break;
                 case LOADGAME:
-                    if(load_game_menu()) game_Menu();
+                    if(load_game_menu()) {
+                        if (currentLocation.equals("CROSSROADS") || currentLocation.equals("CITY")) {
+                            overworld_Menu();
+                        } else {
+                            game_Menu();
+                        }
+                    }
                     break;
                 case QUIT:
                     window.clearLog();
@@ -79,37 +87,149 @@ public class GameEngine {
         } while(choice != QUIT);
     }
 
+    private void overworld_Menu() {
+        currentLocation = "CROSSROADS";
+        String choice = "";
+        do {
+            window.clearLog();
+            window.updateHeader("Location: The Crossroads | Gold: " + hero.getGold());
+            window.appendLog("You stand at a foggy crossroads. The wind howls through the valley.");
+            window.appendLog("Where will your journey take you?");
+
+            window.clearButtons();
+
+            // Change button label dynamically based on possession of the key
+            if (hero.hasTowerKey()) {
+                window.addButton("Tower of Death (Lv 1-100)", "tower");
+            } else {
+                window.addButton("Tower of Death (LOCKED)", "tower");
+            }
+
+            window.addButton("Whispering Woods (Lv 1-20)", "woods");
+            window.addButton("Capital City (Shops & Inn)", "city");
+            window.addButton("Save Game", "save");
+            window.addButton("Main Menu", "main");
+
+            choice = window.getButtonInput();
+
+            switch(choice) {
+                case "tower":
+                    if (hero.hasTowerKey()) {
+                        currentLocation = "TOWER";
+                        CURRENTLEVEL = 1;
+                        game_Menu();
+                    } else {
+                        window.clearLog();
+                        window.appendLog("The massive iron doors of the Tower of Death are sealed shut.");
+                        window.appendLog("A mystic keyhole glows with a faint, eerie light...");
+                        window.appendLog("\n(You must defeat the Gate Keeper in the Whispering Woods to obtain the key).");
+                        waitForAck();
+                    }
+                    break;
+                case "woods":
+                    currentLocation = "WOODS";
+                    CURRENTLEVEL = 1;
+                    game_Menu();
+                    break;
+                case "city":
+                    city_Menu();
+                    break;
+                case "save":
+                    save_game_menu();
+                    break;
+            }
+        } while (!choice.equals("main"));
+    }
+
+    private void city_Menu() {
+        currentLocation = "CITY";
+        String choice = "";
+        do {
+            window.clearLog();
+            window.updateHeader("Location: Capital City | Gold: " + hero.getGold());
+            window.appendLog("The bustling streets of the Capital City surround you.");
+            window.appendLog("Merchants hawk their wares, and the local Inn promises a safe rest.");
+
+            window.clearButtons();
+            window.addButton("Visit Merchant", "shop");
+            window.addButton("Rest at Inn (50g)", "inn");
+            window.addButton("Inventory", "inv");
+            window.addButton("Show Stats", "stats");
+            window.addButton("Leave City", "leave");
+
+            choice = window.getButtonInput();
+
+            switch(choice) {
+                case "shop":
+                    shop_Menu();
+                    break;
+                case "inn":
+                    if (hero.getGold() >= 50) {
+                        hero.subtractGold(50);
+                        hero.healHP();
+                        window.clearLog();
+                        window.appendLog("You pay the innkeeper 50 gold and fall into a deep, dreamless sleep.");
+                        window.appendLog("HP Fully Restored!");
+                    } else {
+                        window.clearLog();
+                        window.appendLog("\"No coin, no bed!\" the innkeeper barks.");
+                    }
+                    waitForAck();
+                    break;
+                case "inv":
+                    inventory_Menu();
+                    break;
+                case "stats":
+                    window.clearLog();
+                    window.appendLog(hero.playerStats());
+                    waitForAck();
+                    break;
+            }
+        } while (!choice.equals("leave"));
+
+        currentLocation = "CROSSROADS";
+    }
+
     public void game_Menu()
     {
         String choice;
+        int maxZoneLevel = currentLocation.equals("TOWER") ? 100 : 20;
+        String zoneName = currentLocation.equals("TOWER") ? "Tower of Death" : "Whispering Woods";
+
         do
         {
             window.clearLog();
-            window.updateHeader("Location: Hub | Level: " + CURRENTLEVEL + " | Gold: " + hero.getGold());
+            window.updateHeader("Location: " + zoneName + " | Level: " + CURRENTLEVEL + " | HP: " + hero.getHP());
+
+            if (currentLocation.equals("TOWER")) {
+                window.appendLog("The stench of death and rusted iron fills your lungs. The obsidian walls pulse.");
+            } else if (currentLocation.equals("WOODS")) {
+                window.appendLog("Twisted branches reach out like skeletal fingers. The mist hides horrors in the dark.");
+            }
+
+            window.appendLog("\n--- Exploration Options ---");
+
             window.clearButtons();
 
-            if(CURRENTLEVEL == 100) window.addButton("Portal to Lvl 1", "1");
-            else window.addButton("Go to Level " + (CURRENTLEVEL + 1), "1");
+            if(CURRENTLEVEL == maxZoneLevel) {
+                window.addButton("Portal to Start", "1");
+            } else {
+                window.addButton("Go to Level " + (CURRENTLEVEL + 1), "1");
+            }
 
             window.addButton("Enter Level " + CURRENTLEVEL, "2");
-            window.addButton("Show Stats", "3");
-            window.addButton("Inventory", "4");
-            window.addButton("Visit Shop", "5");
-            window.addButton("Heal Player", "6");
-            window.addButton("Save Game", "7");
-            window.addButton("Main Menu", "8");
-
-            window.appendLog("--- Exploration Options ---");
-            window.appendLog("Select an action from the action panel below.");
+            window.addButton("Inventory", "3");
+            window.addButton("Show Stats", "4");
+            window.addButton("Flee to Overworld", "5");
 
             choice = window.getButtonInput();
 
             switch(choice)
             {
                 case "1":
-                    if(CURRENTLEVEL == MAXLEVEL) {
+                    if(CURRENTLEVEL == maxZoneLevel) {
                         window.clearLog();
-                        window.appendLog("You have reached the top level and see a swirling portal to go back to Level 1.");
+                        window.appendLog("You have reached the end of this zone. A portal back to the entrance swirls before you.");
                         window.clearButtons();
                         window.addButton("Enter Portal (Yes)", "y");
                         window.addButton("Stay Here (No)", "n");
@@ -122,37 +242,32 @@ public class GameEngine {
                     break;
                 case "2":
                     window.clearLog();
-                    window.appendLog("Entering level " + CURRENTLEVEL + "...\n");
+                    window.appendLog("Delving into " + zoneName + " - Level " + CURRENTLEVEL + "...\n");
                     battle = new BattleEngine(window);
-                    hero = battle.battle_loader(hero, CURRENTLEVEL);
+                    // CRITICAL: Passed currentLocation so the BattleEngine knows what enemies to spawn!
+                    hero = battle.battle_loader(hero, CURRENTLEVEL, currentLocation);
                     break;
                 case "3":
+                    inventory_Menu();
+                    break;
+                case "4":
                     window.clearLog();
                     window.appendLog(hero.playerStats());
                     waitForAck();
                     break;
-                case "4":
-                    inventory_Menu();
-                    break;
                 case "5":
-                    shop_Menu();
-                    break;
-                case "6":
-                    hero.healHP();
                     window.clearLog();
-                    window.appendLog("Your wounds close completely. Character has been fully healed.\n");
+                    window.appendLog("You turn back and flee to the safety of the Crossroads...");
                     waitForAck();
-                    break;
-                case "7":
-                    save_game_menu();
-                    break;
-                case "8":
-                    window.clearLog();
-                    window.appendLog("Returning to main menu...\n");
-                    waitForAck();
+                    currentLocation = "CROSSROADS";
                     break;
             }
-        } while(!choice.equals("8"));
+        } while(!choice.equals("5") && hero.getHP() > 0);
+
+        if (hero.getHP() <= 0) {
+            choice = "5";
+            currentLocation = "CROSSROADS";
+        }
     }
 
     private void inventory_Menu() {
@@ -174,7 +289,7 @@ public class GameEngine {
                     window.addButton(hero.getInventory().get(i).getName(), String.valueOf(i));
                 }
             }
-            window.addButton("Back to Hub", "back");
+            window.addButton("Back", "back");
 
             choice = window.getButtonInput();
 
@@ -226,7 +341,6 @@ public class GameEngine {
 
             int pLvl = hero.getLVL();
 
-            // STRICT TIERING: Now only displays the specific tier for your current 10-level bracket
             if (pLvl >= 90) { addShopTierToButtons(10); }
             else if (pLvl >= 80) { addShopTierToButtons(9); }
             else if (pLvl >= 70) { addShopTierToButtons(8); }
@@ -314,55 +428,25 @@ public class GameEngine {
     private void addShopTierToButtons(int tier) {
         switch (tier) {
             case 1:
-                addShopItem("Broadsword", 100);
-                addShopItem("Leather Armor", 50);
-                addShopItem("Leather Cap", 25);
-                addShopItem("Leather Shield", 25); break;
+                addShopItem("Broadsword", 100); addShopItem("Leather Armor", 50); addShopItem("Leather Cap", 25); addShopItem("Leather Shield", 25); break;
             case 2:
-                addShopItem("Longsword", 500);
-                addShopItem("Bronze Armor", 250);
-                addShopItem("Bronze Helm", 125);
-                addShopItem("Bronze Shield", 125); break;
+                addShopItem("Longsword", 500); addShopItem("Bronze Armor", 250); addShopItem("Bronze Helm", 125); addShopItem("Bronze Shield", 125); break;
             case 3:
-                addShopItem("Iron Sword", 1500);
-                addShopItem("Iron Armor", 750);
-                addShopItem("Iron Helm", 375);
-                addShopItem("Iron Shield", 375); break;
+                addShopItem("Iron Sword", 1500); addShopItem("Iron Armor", 750); addShopItem("Iron Helm", 375); addShopItem("Iron Shield", 375); break;
             case 4:
-                addShopItem("Dark Sword", 3000);
-                addShopItem("Dark Armor", 1500);
-                addShopItem("Dark Helm", 750);
-                addShopItem("Dark Shield", 750); break;
+                addShopItem("Dark Sword", 3000); addShopItem("Dark Armor", 1500); addShopItem("Dark Helm", 750); addShopItem("Dark Shield", 750); break;
             case 5:
-                addShopItem("Mythril Sword", 6000);
-                addShopItem("Mythril Armor", 3000);
-                addShopItem("Mythril Helm", 1500);
-                addShopItem("Mythril Shield", 1500); break;
+                addShopItem("Mythril Sword", 6000); addShopItem("Mythril Armor", 3000); addShopItem("Mythril Helm", 1500); addShopItem("Mythril Shield", 1500); break;
             case 6:
-                addShopItem("Flame Sword", 10000);
-                addShopItem("Flame Mail", 5000);
-                addShopItem("Flame Helm", 2500);
-                addShopItem("Flame Shield", 2500); break;
+                addShopItem("Flame Sword", 10000); addShopItem("Flame Mail", 5000); addShopItem("Flame Helm", 2500); addShopItem("Flame Shield", 2500); break;
             case 7:
-                addShopItem("Ice Brand", 16000);
-                addShopItem("Ice Armor", 8000);
-                addShopItem("Ice Helm", 4000);
-                addShopItem("Ice Shield", 4000); break;
+                addShopItem("Ice Brand", 16000); addShopItem("Ice Armor", 8000); addShopItem("Ice Helm", 4000); addShopItem("Ice Shield", 4000); break;
             case 8:
-                addShopItem("Defender", 25000);
-                addShopItem("Genji Armor", 12500);
-                addShopItem("Genji Helm", 6250);
-                addShopItem("Genji Shield", 6250); break;
+                addShopItem("Defender", 25000); addShopItem("Genji Armor", 12500); addShopItem("Genji Helm", 6250); addShopItem("Genji Shield", 6250); break;
             case 9:
-                addShopItem("Ragnarok", 40000);
-                addShopItem("Crystal Mail", 20000);
-                addShopItem("Crystal Helm", 10000);
-                addShopItem("Crystal Shield", 10000); break;
+                addShopItem("Ragnarok", 40000); addShopItem("Crystal Mail", 20000); addShopItem("Crystal Helm", 10000); addShopItem("Crystal Shield", 10000); break;
             case 10:
-                addShopItem("Excalibur", 75000);
-                addShopItem("Adamant Armor", 37500);
-                addShopItem("Ribbon", 18750);
-                addShopItem("Aegis Shield", 18750); break;
+                addShopItem("Excalibur", 75000); addShopItem("Adamant Armor", 37500); addShopItem("Ribbon", 18750); addShopItem("Aegis Shield", 18750); break;
         }
     }
 
@@ -394,14 +478,13 @@ public class GameEngine {
         window.updateHeader("= THE ARRIVAL =");
         window.appendLog("You stand before the towering gates, the freezing wind howling through the valley.");
         window.appendLog("You have traveled far to claim the legendary power sealed at the 100th floor.");
-        window.appendLog("\nWith a heavy push, the massive doors groan open, swallowing you into the shadows.");
-        waitForIntroAck("Step Inside");
+        window.appendLog("But the massive iron doors refuse to budge. A mystic keyhole glows faintly in the center...");
+        waitForIntroAck("Seek the Key");
 
         window.clearLog();
-        window.updateHeader("= THE SAFE ZONE =");
-        window.appendLog("The heavy doors slam shut behind you, sealing away the outside world.");
-        window.appendLog("You find yourself in a dim, magically warded Exploration Hub at the base of the tower.");
-        window.appendLog("From here, the only way forward is up.");
+        window.updateHeader("= THE OVERWORLD =");
+        window.appendLog("You turn your back on the locked Tower. To the east lies the Whispering Woods.");
+        window.appendLog("Legends say a terrifying Gate Keeper lurks within, holding the Obsidian Key.");
         window.appendLog("\nSteel your nerves, " + hero.getName() + ". Your trial begins now.");
         waitForIntroAck("Begin Journey");
     }
@@ -506,8 +589,10 @@ public class GameEngine {
             int def = filereader.nextInt();
             int gold = filereader.nextInt();
             CURRENTLEVEL = filereader.nextInt();
+            currentLocation = filereader.next();
+            boolean hasTowerKey = filereader.nextBoolean(); // NEW: Read Key Flag
 
-            hero = new Player(name, exp, lvl, hp, mp, str, agl, Int, sta, lck, atk, def, gold);
+            hero = new Player(name, exp, lvl, hp, mp, str, agl, Int, sta, lck, atk, def, gold, hasTowerKey);
 
             String wepName = filereader.next();
             if (!wepName.equals("None")) hero.setWeapon(Item.getByName(wepName));
@@ -549,6 +634,8 @@ public class GameEngine {
             out.write(hero.getDEF() + " ");
             out.write(hero.getGold() + " ");
             out.write(CURRENTLEVEL + " ");
+            out.write(currentLocation + " ");
+            out.write(hero.hasTowerKey() + " "); // NEW: Save Key Flag
 
             out.write((hero.getWeapon() != null ? hero.getWeapon().getName().replace(" ", "_") : "None") + " ");
             out.write((hero.getArmor() != null ? hero.getArmor().getName().replace(" ", "_") : "None") + " ");
