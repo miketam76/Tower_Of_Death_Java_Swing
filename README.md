@@ -1,4 +1,3 @@
-Markdown
 # Tower Of Death - Retro Edition (v1.2)
 
 A classic, unforgiving Java-based dungeon crawler capturing the intense challenge and aesthetic of 1980s terminal-based interfaces. Ascend an obsidian spire, manage your resources, and fight your way to the ultimate trial on the 100th floor.
